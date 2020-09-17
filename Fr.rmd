@@ -1,0 +1,123 @@
+---
+title: "France Opinion Polls MRP"
+author: Gabriel Gilling
+---
+
+It seems that MEPs are elected at the NUTS level.
+
+I. Get regional level roll call votes. Need to figure out what roll call votes can be correlated to regional level preferences
+
+
+
+# T4-0084/1995
+```{r}
+#install.packages("rjson")
+library(rjson)
+MEP.data <- fromJSON(file = "/Users/gabgilling/Downloads/ep_votes.json")
+
+grepl("A6", MEP.data[[5]]$title)
+
+cond <- sapply(MEP.data, function(x) grepl("A8-0287/2016", x$title))
+
+dat <- MEP.data[cond]
+
+dat[[1]]$votes$`+`$groups$ALDE[[1]]$mepid
+
+dat[[4]]$title
+```
+
+II. Get regional level preferences for FR/UK/GE using EB 
+
+Discrimination in the EU in 2015
+
+
+III. Poststratify using Eurostat.
+
+```{r}
+library(haven)
+library(tidyverse)
+eb <- read_dta("/Users/gabgilling/Downloads/ZA5998_v2-0-0.dta")
+table(eb$nuts)
+str(eb)
+
+ess <- read_dta("/Users/gabgilling/Downloads/ESS8e02_1.stata/ESS8e02_1.dta")
+ess.f <- ess %>% filter(cntry == "FR") %>% select(regunit, impenv)
+ess.f
+```
+
+https://en.wikipedia.org/wiki/European_Parliament_constituency#United_Kingdom
+
+https://en.wikipedia.org/wiki/European_Parliament_constituencies_in_France
+
+## France
+
+2004
+2009
+2014
+
+North-West FRE + FRD
+Normandy FRD
+FR23   Haute-Normandie
+FR25   Basse-Normandie
+
+Haut-de-France = Nord-Pas-de-Calais + Picardy FRE 
+FR30   Nord - Pas-de-Calais
+FR22   Picardie
+
+West	-- FR5
+Pays de la Loire, Brittany, Poitou-Charentes
+FR51   Pays de la Loire
+FR52   Bretagne
+FR53   Poitou-Charentes
+
+East	FRC + FRF
+Grand Est, FRC
+Alsace, Champagne-Ardenne,Lorraine
+FR42   Alsace
+FR21   Champagne-Ardenne
+FR41   Lorraine
+and Bourgogne-Franche-Comté. FRF
+FR26   Bourgogne
+FR43   Franche-Comté
+
+South-West
+Aquitaine FRI1
+FR61   Aquitaine
+Languedoc-Roussillon-Midi-Pyrénées FRJ
+FR81   Languedoc-Roussillon
+FR62   Midi-Pyrénées
+
+South-East
+Corsica FRM
+FR83   Corse [not covered]
+
+Provence-Alpes-Côte d’Azur FRL
+FR82   Provence-Alpes-Côte d'Azur
+Rhône-Alpes	FRK2
+FR71   Rhône-Alpes
+
+Massif central–Centre
+Centre-Val de Loire FRB
+FR24   Centre [FR
+Auvergne FRK1
+FR72   Auvergne
+Limousin FRI2
+FR63   Limousin
+
+Île-de-France FR1
+FR10
+
+Overseas	
+
+```{r}
+
+# eb83.3fr <- eb %>% filter(nuts %in% c("FR10", "FR21", "FR22", "FR23", "FR24", "FR25", "FR26", "FR30", 
+# "FR41", "FR42", "FR43",  "FR51",  "FR52",  "FR53",  "FR61",  "FR62"))
+
+eb83.3fr <- eb %>% filter(country == 1) #france numbah 1
+
+census2011 <- read.csv("/Users/gabgilling/Downloads/2011census.csv", header = T)
+
+```
+
+
