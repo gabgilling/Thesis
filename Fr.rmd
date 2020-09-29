@@ -49,6 +49,8 @@ eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, s
 
 
 
+
+
 eb81.3_filt <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "DE-W", "DE-E", "GB-NIR", 'IT'))
 
 # drop annoying columns
@@ -79,13 +81,20 @@ census2011$age_cat <- ifelse(census2011$AGE %in% c('Y18', 'Y19', 'Y20-24'), 'Y18
 census2011$gender_male <- ifelse(census2011$SEX == 'M', 1,0 )
 census2011$edu <- with(census2011, ifelse(EDU == 'ED1', 1, ifelse(EDU == 'ED2', 2, ifelse(EDU == 'ED3', 3,
                                     ifelse(EDU == 'ED4', 4, ifelse(EDU == 'ED5', 5, ifelse(EDU == 'ED6', 6, EDU)))))))
+census2011$nuts1 <- census2011$GEO
 
 unique(census2011$EDU)
 ```
 
 
+```{r}
+
+```
+
+
 I. Get regional level roll call votes. Need to figure out what roll call votes can be correlated to regional level preferences
 
+votewatch.eu/en/term9-european-parliament-latest-votes.html
 
 
 # T4-0084/1995
