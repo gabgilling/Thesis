@@ -1,0 +1,45 @@
+﻿NUTS1,CONSTITUENCY,NAME,NUTS2
+ITC,Nord-Ovest,Nord-Ovest,
+ITH,Nord-Est,Nord-Est,
+ITI,Centro (IT),Centro (IT),
+ITF,Sud,Sud,
+ITG,Isole,Isole,
+UKC,North East (UK),North East (UK),
+UKD,North West (UK),North West (UK),
+UKE,Yorkshire and The Humber,Yorkshire and The Humber,
+UKF,East Midlands (UK),East Midlands (UK),
+UKG,West Midlands (UK),West Midlands (UK),
+UKH,East of England,East of England,
+UKI,London,London,
+UKJ,South East (UK),South East (UK),
+UKK,South West (UK),South West (UK),
+UKL,Wales,Wales,
+UKM,Scotland,Scotland,
+UKN,Northern Ireland (UK),Northern Ireland (UK),
+FR1,Ile de France,Île de France,
+FR10,Ile de France,Île de France,
+FRB,Massif-central–Centre,Centre - Val de Loire,FR24
+FRC,East France,Bourgogne - Franche-Comté,
+FRC1,East France,Bourgogne,FR26
+FRC2,East France,Franche-Comté,FR43
+FRD,North-West France,Normandie,
+FRD1,North-West France,Basse-Normandie,FR25
+FRD2,North-West France,Haute-Normandie,FR23
+FRE,North-West France,Nord-Pas-de-Calais - Picardie,
+FRE1,North-West France,Nord-Pas-de-Calais,FR30
+FRE2,North-West France,Picardie,FR22
+FRF,East France,Alsace - Champagne-Ardenne - Lorraine,
+FRF1,East France,Alsace,FR42
+FRF2,East France,Champagne-Ardenne,FR21
+FRF3,East France,Lorraine,FR41
+FRG,West France,Pays-de-la-Loire,FR51
+FRH,West France,Bretagne,FR52
+FRI1,South-West France,Aquitaine,FR61
+FRI2,Massif-central–Centre,Limousin,FR63
+FRI3,West France,Poitou-Charentes,FR53
+FRJ1,South-West France,Languedoc-Roussillon,FR81
+FRJ2,South-West France,Midi-Pyrénées,FR62
+FRK1,Massif-central–Centre,Auvergne,FR72
+FRK2,South-East France,Rhône-Alpes,FR71
+FRL0,South-East France,Provence-Alpes-Côte d'Azur,FR82
+FRM0,South-East France,Corse,FR83 

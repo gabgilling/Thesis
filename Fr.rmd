@@ -39,16 +39,10 @@ eb81.3$gender_male <- ifelse(eb81.3$d10 == 2, 1, 0)
 eb81.3$age_cat <- ifelse(eb81.3$d10 == 2, 1, 0)
 eb81.3$edu <- eb81.3$qb1
 
-eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
-                      ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("GB", eb81.3$p7gb, sep = ""),
-                      ifelse(isocntry %in% c("DE-W", "DE-E"), paste("DE", eb81.3$p7de, sep = ""),
+eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr_r, sep = ""), 
+                      ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("GB", eb81.3$p7gb_r, sep = ""),
+                      ifelse(isocntry %in% c("DE-W", "DE-E"), paste("DE", eb81.3$p7de_r, sep = ""),
                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it, sep = ""), NA)))))
-
-
-
-
-
-
 
 
 eb81.3_filt <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "DE-W", "DE-E", "GB-NIR", 'IT'))
@@ -60,7 +54,7 @@ eb81.3_filt[,grep("eu|w", colnames(eb81.3_filt))] <- NULL
 
 
 colnames(eb81.3_filt)
-unique(eb81.3$isocntry)
+unique(eb81.3_filt$nuts1)
 
 ```
 
@@ -83,12 +77,39 @@ census2011$edu <- with(census2011, ifelse(EDU == 'ED1', 1, ifelse(EDU == 'ED2', 
                                     ifelse(EDU == 'ED4', 4, ifelse(EDU == 'ED5', 5, ifelse(EDU == 'ED6', 6, EDU)))))))
 census2011$nuts1 <- census2011$GEO
 
-unique(census2011$EDU)
+unique(census2011$nuts1)
 ```
 
 
-```{r}
+Modeling 
 
+NEED REGIONAL LEVEL PREDICTORS?
+
+
+"We add regional-level predictors from Eurostat to improve the model fit. We retrieve complete
+regional data on GDP per capita, area size, population density, tertiary education shares, and
+median household income. We use all regional predictors in the BART model, because the
+Bayesian back-fitting algorithm does select on the most relevant predictors. However, we have
+to select manually some variables for the multi-level regressions to avoid overfitting. Therefore,
+we choose a parsimonious set of predictors for the regression-based methods. Here, we account
+for the effect of economic conditions on EU trust (Foster and Frieden, 2017), adding the regional
+GDP. Moreover, we add a variable measuring whether a region lies in eastern, western, northern or southern Europe (“grand region”)"
+
+## Add country-level predictors
+maybe racial / religious predictors
+
+## add marital status 
+
+https://ec.europa.eu/eurostat/web/rural-development/data
+
+```{r}
+library(rstanarm)
+
+nat_resources <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, nuts1) %>%
+  summarise(pro = sum(qa2_1 == 1), against = n() - pro) %>% na.omit
+
+fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|nuts1) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + p_tot_catholic_adh + p_evan_mormon_adh, data = sup.money, family = binomial(link = "logit"), 
+                            control = list(adapt_delta = 0.99), refresh = 0)
 ```
 
 
