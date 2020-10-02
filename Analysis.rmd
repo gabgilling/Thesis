@@ -65,11 +65,10 @@ Step 2: Census
 ```{r}
 library(data.table)
 
-nuts_dictionary <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/nuts_dictionary.csv")
+nuts_dictionary <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/nuts_dictionary.csv")
 
-census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/census_education.csv")
+census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_education.csv")
 
-census2011_education <- census2011_education %>% filter(SEX != 'T', AGE != 'TOTAL', !EDU %in% c('TOTAL','NONE', 'NAP', 'UNK') )
 
 census2011_education$CAS <- NULL
 census2011_education$TIME <- NULL
@@ -79,7 +78,6 @@ census2011_education$FLAGS <- NULL
 census2011_education$FOOTNOTES <- NULL
 
 census2011_education$constituency <- ""
-
 
 
 for (i in 1:nrow(census2011_education)){
