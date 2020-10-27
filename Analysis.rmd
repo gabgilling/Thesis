@@ -93,12 +93,10 @@ unique(census2011_education$nuts1)
 
 Step 3: Get regional and country level predictors
 
+https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv
 ```{r}
-
+reg_preds <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv")
 ```
-
-
-https://ec.europa.eu/eurostat/web/regions/data/database
 
 "We add regional-level predictors from Eurostat to improve the model fit. We retrieve complete
 regional data on GDP per capita, area size, population density, tertiary education shares, and

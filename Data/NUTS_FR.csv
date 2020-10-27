@@ -1,16 +1,12 @@
 ﻿Constituency,Region Name,NUTS2_old,NUTS2,NUTS1
 Ile de France,Île de France,FR1,FR1,FR1
 Massif-central–Centre,Centre - Val de Loire,FR24,FRB,FRB
-East France,Bourgogne - Franche-Comté,,FRC,FRC
 East France,Bourgogne,FR26,FRC1,FRC
 East France,Franche-Comté,FR43,FRC2,FRC
-North-West France,Normandie,,FRD,FRD
 North-West France,Basse-Normandie,FR25,FRD1,FRD
 North-West France,Haute-Normandie,FR23,FRD2,FRD
-North-West France,Nord-Pas-de-Calais - Picardie,,FRE,FRE
 North-West France,Nord-Pas-de-Calais,FR30,FRE1,FRE
 North-West France,Picardie,FR22,FRE2,FRE
-East France,Alsace - Champagne-Ardenne - Lorraine,,FRF,FRF
 East France,Alsace,FR42,FRF1,FRF
 East France,Champagne-Ardenne,FR21,FRF2,FRF
 East France,Lorraine,FR41,FRF3,FRF
