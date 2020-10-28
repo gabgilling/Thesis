@@ -39,22 +39,27 @@ eb81.3$gender_male <- ifelse(eb81.3$d10 == 2, 1, 0)
 eb81.3$age_cat <- ifelse(eb81.3$d10 == 2, 1, 0)
 eb81.3$edu <- eb81.3$qb1
 
-eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr_r, sep = ""), 
-                      ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("GB", eb81.3$p7gb_r, sep = ""),
-                      ifelse(isocntry %in% c("DE-W", "DE-E"), paste("DE", eb81.3$p7de_r, sep = ""),
-                      ifelse(isocntry == "IT", paste("IT", eb81.3$p7it, sep = ""), NA)))))
+# eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr_r, sep = ""), 
+#                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb_r, sep = ""),
+#                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it_r1, sep = ""), NA))))
+# 
+# eb81.3$nuts2 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
+#                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
+#                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it, sep = ""), NA))))
+
+eb81.3$NUTS <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
+                      ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
+                      ifelse(isocntry == "IT", paste("IT", eb81.3$p7it_r1, sep = ""), NA))))
 
 
-eb81.3_filt <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "DE-W", "DE-E", "GB-NIR", 'IT'))
+eb81.3_filt <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
 
 # drop annoying columns
 eb81.3_filt[,grep("q1_", colnames(eb81.3_filt))] <- NULL          
 eb81.3_filt[,grep("eu|w", colnames(eb81.3_filt))] <- NULL  
 
 
-
-colnames(eb81.3_filt)
-unique(eb81.3_filt$nuts1)
+unique(eb81.3_filt$NUTS)
 
 ```
 
@@ -68,13 +73,12 @@ nuts_fr <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/
 
 census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_education.csv")
 
-census2011_education$NUTS <- census2011_education$GEO
+census2011_education$NUTS2_old <- census2011_education$GEO
 
+reg_preds <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv")
 
+census2011_education <- merge(reg_preds %>% dplyr::select(NUTS2_old, NUTS),census2011_education, by = "NUTS2_old")
 # census2011_education <- merge(census2011_education, nuts_fr, by = "NUTS2", all.x = TRUE)
-
-census2011_education <- merge(reg_preds %>% dplyr::select(NUTS, Region.Name),census2011_education, by = "Region.Name")
-
 
 census2011_education$CAS <- NULL
 census2011_education$TIME <- NULL
@@ -98,7 +102,8 @@ Step 3: Get regional and country level predictors
 
 https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv
 ```{r}
-reg_preds <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv")
+
+
 ```
 
 "We add regional-level predictors from Eurostat to improve the model fit. We retrieve complete
