@@ -32,11 +32,21 @@ qb1: EDUCATION
 ```{r}
 library(haven)
 library(dplyr)
+library(robustHD)
+library(ggplot2)
 
 eb81.3 <- read_dta("/Users/gabgilling/Downloads/ZA5914_v3-0-0.dta")
 
 eb81.3$gender_male <- ifelse(eb81.3$d10 == 2, 1, 0)
-eb81.3$age_cat <- ifelse(eb81.3$d10 == 2, 1, 0)
+eb81.3$age_cat <- with(eb81.3, ifelse(d11 >= 18 & d11 < 25, "Y18-24",
+                               ifelse(d11 >= 25 & d11 < 30, "Y25-29",
+                               ifelse( d11 >= 30 & d11 < 50, "Y30-49",
+                                      ifelse(d11 >= 50 & d11 < 65, "Y50-64",
+                                      ifelse(d11 >= 65 & d11 < 85, "Y65-84",
+                                      ifelse(d11 >= 85, "Y_GE85",
+                                      NA)))))))
+                                      
+                                      
 eb81.3$edu <- eb81.3$qb1
 
 # eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr_r, sep = ""), 
@@ -47,7 +57,7 @@ eb81.3$edu <- eb81.3$qb1
 #                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
 #                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it, sep = ""), NA))))
 
-eb81.3$NUTS <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
+eb81.3$NUTS_eb <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it_r1, sep = ""), NA))))
 
@@ -59,7 +69,7 @@ eb81.3_filt[,grep("q1_", colnames(eb81.3_filt))] <- NULL
 eb81.3_filt[,grep("eu|w", colnames(eb81.3_filt))] <- NULL  
 
 
-unique(eb81.3_filt$NUTS)
+unique(eb81.3_filt$NUTS_eb)
 
 ```
 
@@ -67,9 +77,8 @@ Step 2: Census
 ```{r}
 library(data.table)
 
-nuts_dictionary <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/nuts_dictionary.csv")
-nuts_fr <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/NUTS_FR.csv")
-
+# nuts_dictionary <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/nuts_dictionary.csv")
+# nuts_fr <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/NUTS_FR.csv")
 
 census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_education.csv")
 
@@ -77,7 +86,7 @@ census2011_education$NUTS2_old <- census2011_education$GEO
 
 reg_preds <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv")
 
-census2011_education <- merge(reg_preds %>% dplyr::select(NUTS2_old, NUTS),census2011_education, by = "NUTS2_old")
+census2011_education <- merge(reg_preds %>% dplyr::select(NUTS2_old, NUTS, NUTS_eb),census2011_education, by = "NUTS2_old")
 # census2011_education <- merge(census2011_education, nuts_fr, by = "NUTS2", all.x = TRUE)
 
 census2011_education$CAS <- NULL
@@ -90,17 +99,16 @@ census2011_education$FOOTNOTES <- NULL
 
 census2011_education$age_cat <- ifelse(census2011_education$AGE %in% c('Y18', 'Y19', 'Y20-24'), 'Y18-24', 
                                        census2011_education$AGE)
+
 census2011_education$gender_male <- ifelse(census2011_education$SEX == 'M', 1,0 )
 census2011_education$edu <- with(census2011_education, ifelse(EDU == 'ED1', 1, ifelse(EDU == 'ED2', 2, ifelse(EDU == 'ED3', 3,
                                     ifelse(EDU == 'ED4', 4, ifelse(EDU == 'ED5', 5, ifelse(EDU == 'ED6', 6, NA)))))))
-
-unique(census2011_education$nuts1)
 ```
 
 
 Step 3: Get regional and country level predictors
 
-https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv
+https://ec.europa.eu/eurostat/web/regions/data/database
 ```{r}
 
 
@@ -122,13 +130,20 @@ maybe racial / religious predictors
 
 https://ec.europa.eu/eurostat/web/rural-development/data
 
+
+## is having more regional predictors than individual predictors OK?
+
 ```{r}
 library(rstanarm)
 
-nat_resources <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, nuts1) %>%
-  summarise(pro = sum(qa2_1 == 1), against = n() - pro) %>% na.omit
+nat_resources <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(qa2_1 == 1), against = n() - pro) %>% na.omit()
 
-fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|nuts1) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + p_tot_catholic_adh + p_evan_mormon_adh, data = sup.money, family = binomial(link = "logit"), 
+nat_resources <- merge(nat_resources, reg_preds, by = "NUTS_eb")
+
+
+
+fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + p_tot_catholic_adh + p_evan_mormon_adh, data = sup.money, family = binomial(link = "logit"), 
                             control = list(adapt_delta = 0.99), refresh = 0)
 ```
 
