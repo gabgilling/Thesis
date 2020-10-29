@@ -86,7 +86,11 @@ census2011_education$NUTS2_old <- census2011_education$GEO
 
 reg_preds <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv")
 
-census2011_education <- merge(reg_preds %>% dplyr::select(NUTS2_old, NUTS, NUTS_eb),census2011_education, by = "NUTS2_old")
+reg_preds_std <- reg_preds %>% select(gdp_cap,density, area, higher_ed, hhd_income, unemp_pct) %>% robustHD::standardize()
+
+reg_preds_std <- cbind(reg_preds_std, reg_preds %>% select(NUTS, NUTS2_old, NUTS_eb, Region.Name))
+
+census2011_education <- merge(census2011_education, reg_preds_std, by = "NUTS2_old")
 # census2011_education <- merge(census2011_education, nuts_fr, by = "NUTS2", all.x = TRUE)
 
 census2011_education$CAS <- NULL
@@ -103,6 +107,14 @@ census2011_education$age_cat <- ifelse(census2011_education$AGE %in% c('Y18', 'Y
 census2011_education$gender_male <- ifelse(census2011_education$SEX == 'M', 1,0 )
 census2011_education$edu <- with(census2011_education, ifelse(EDU == 'ED1', 1, ifelse(EDU == 'ED2', 2, ifelse(EDU == 'ED3', 3,
                                     ifelse(EDU == 'ED4', 4, ifelse(EDU == 'ED5', 5, ifelse(EDU == 'ED6', 6, NA)))))))
+
+census2011_education$freq <- census2011_education$VALUE
+
+census2011_education$GEO <- NULL
+census2011_education$SEX <- NULL
+census2011_education$AGE <- NULL
+census2011_education$EDU <- NULL
+census2011_education$VALUE <- NULL
 ```
 
 
@@ -133,18 +145,56 @@ https://ec.europa.eu/eurostat/web/rural-development/data
 
 ## is having more regional predictors than individual predictors OK?
 
-```{r}
+```{r estimate_preferences}
 library(rstanarm)
 
 nat_resources <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
   summarise(pro = sum(qa2_1 == 1), against = n() - pro) %>% na.omit()
 
-nat_resources <- merge(nat_resources, reg_preds, by = "NUTS_eb")
+nat_resources <- merge(nat_resources, reg_preds_std, by = "NUTS_eb")
+
+fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + density + area + higher_ed + hhd_income + unemp_pct, data = nat_resources, family = binomial(link = "logit"))
+
+print(fit.nat_resources, digits = 3)
+```
 
 
+```{r poststratify}
 
-fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + p_tot_catholic_adh + p_evan_mormon_adh, data = sup.money, family = binomial(link = "logit"), 
-                            control = list(adapt_delta = 0.99), refresh = 0)
+generate_region_estimates <- function(poststrat, fitted_model){
+  
+  ## generate state_df
+  N <- length(unique(poststrat$NUTS_eb))
+  
+  region_preferences <- data.frame(
+                          region = unique(poststrat$Region.Name),
+                          pref = rep(-1, N),
+                          sd = rep(-1, N)
+)
+
+  for (i in unique(poststrat$Region.Name)) {
+    print(i)
+    poststrat_region <- poststrat[poststrat$Region.Name == i, ]
+    
+    posterior_prob_region <- posterior_epred(
+      fitted_model,
+      # transform = TRUE,
+      draws = 1000,
+      newdata = as.data.frame(poststrat_region)
+    )
+    
+    poststrat_prob_region <- posterior_prob_region %*% poststrat_region$freq / sum(poststrat_region$freq)
+
+    #This is the estimate for popn in state:
+    region_preferences[region_preferences$region == i,]$pref <- round(mean(poststrat_prob_region), 4)
+    region_preferences[region_preferences$region == i,]$sd <- round(sd(poststrat_prob_region), 4)
+    
+  }
+  return(region_preferences)
+}
+
+
+nat_resources_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.nat_resources)
 ```
 
 
@@ -152,6 +202,7 @@ I. Get regional level roll call votes. Need to figure out what roll call votes c
 
 votewatch.eu/en/term9-european-parliament-latest-votes.html
 
+https://mepsurvey.eu/data-objects/data/
 
 # T4-0084/1995
 ```{r}
@@ -192,76 +243,4 @@ ess.f
 https://en.wikipedia.org/wiki/European_Parliament_constituency#United_Kingdom
 
 https://en.wikipedia.org/wiki/European_Parliament_constituencies_in_France
-
-## France
-
-2004
-2009
-2014
-
-North-West FRE + FRD
-Normandy FRD
-FR23   Haute-Normandie
-FR25   Basse-Normandie
-
-Haut-de-France = Nord-Pas-de-Calais + Picardy FRE 
-FR30   Nord - Pas-de-Calais
-FR22   Picardie
-
-West	-- FR5
-Pays de la Loire, Brittany, Poitou-Charentes
-FR51   Pays de la Loire
-FR52   Bretagne
-FR53   Poitou-Charentes
-
-East	FRC + FRF
-Grand Est, FRC
-Alsace, Champagne-Ardenne,Lorraine
-FR42   Alsace
-FR21   Champagne-Ardenne
-FR41   Lorraine
-and Bourgogne-Franche-Comté. FRF
-FR26   Bourgogne
-FR43   Franche-Comté
-
-South-West
-Aquitaine FRI1
-FR61   Aquitaine
-Languedoc-Roussillon-Midi-Pyrénées FRJ
-FR81   Languedoc-Roussillon
-FR62   Midi-Pyrénées
-
-South-East
-Corsica FRM
-FR83   Corse [not covered]
-
-Provence-Alpes-Côte d’Azur FRL
-FR82   Provence-Alpes-Côte d'Azur
-Rhône-Alpes	FRK2
-FR71   Rhône-Alpes
-
-Massif central–Centre
-Centre-Val de Loire FRB
-FR24   Centre [FR
-Auvergne FRK1
-FR72   Auvergne
-Limousin FRI2
-FR63   Limousin
-
-Île-de-France FR1
-FR10
-
-Overseas	
-
-```{r}
-
-# eb83.3fr <- eb %>% filter(nuts %in% c("FR10", "FR21", "FR22", "FR23", "FR24", "FR25", "FR26", "FR30", 
-# "FR41", "FR42", "FR43",  "FR51",  "FR52",  "FR53",  "FR61",  "FR62"))
-
-eb83.3fr <- eb %>% filter(country == 1) #france numbah 1
-
-
-
-```
-
 
