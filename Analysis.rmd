@@ -204,6 +204,13 @@ votewatch.eu/en/term9-european-parliament-latest-votes.html
 
 https://mepsurvey.eu/data-objects/data/
 
+# MEP Survey data
+
+```{r}
+
+
+```
+
 # T4-0084/1995
 ```{r}
 # install.packages("rjson")
