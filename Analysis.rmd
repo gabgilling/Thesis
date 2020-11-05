@@ -212,6 +212,9 @@ https://mepsurvey.eu/data-objects/data/
 ```
 
 # T4-0084/1995
+
+Final votes tabulated as "Proposition"
+Amendments - "Am"
 ```{r}
 # install.packages("rjson")
 library(rjson)
@@ -221,7 +224,20 @@ grepl("A6", MEP.data[[5]]$title)
 
 cond <- sapply(MEP.data, function(x) grepl("A8-0287/2016", x$title))
 
-dat <- MEP.data[cond]
+cond <- sapply(MEP.data, function(x) grepl("envir", x$title))
+
+cond.ts <- sapply(MEP.data, function(x) grepl("2018-11", x$ts))
+
+#A8-0354/2018 CO2 emission performance standards for new heavy duty vehicles ***I	
+cond1 <- sapply(MEP.data, function(x) grepl("A8-0354/2018", x$title))
+
+cond2 <- sapply(dat, function(x) grepl("Proposition", x$title))
+
+dat <- MEP.data[cond1]
+
+dat2 <- dat[cond2]
+
+dat2[[1]]$votes$`+`
 
 dat[[1]]$votes$`+`$groups$ALDE[[1]]$mepid
 
