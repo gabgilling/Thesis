@@ -215,7 +215,7 @@ https://mepsurvey.eu/data-objects/data/
 ```{r}
 # install.packages("rjson")
 library(rjson)
-MEP.data <- fromJSON(file = "/Users/gabgilling/Downloads/ep_votes.json")
+MEP.data <- fromJSON(file = "/Users/gabgilling/Dropbox/QMSS/Fall 2020/Thesis/Data/ep_votes.json")
 
 grepl("A6", MEP.data[[5]]$title)
 
