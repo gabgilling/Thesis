@@ -78,7 +78,7 @@ Step 2: Census
 library(data.table)
 
 # nuts_dictionary <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/nuts_dictionary.csv")
-# nuts_fr <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/NUTS_FR.csv")
+nuts_fr <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/NUTS_FR.csv")
 
 census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_education.csv")
 
@@ -228,6 +228,9 @@ mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/
 
 Final votes tabulated as "Proposition"
 Amendments - "Am"
+
+Link regions to constituencies
+
 ```{r}
 # install.packages("rjson")
 library(rjson)
