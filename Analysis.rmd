@@ -110,6 +110,8 @@ census2011_education$edu <- with(census2011_education, ifelse(EDU == 'ED1', 1, i
 
 census2011_education$freq <- census2011_education$VALUE
 
+census2011_education$country <- substr(census2011_education$NUTS, 1, 2)
+
 census2011_education$GEO <- NULL
 census2011_education$SEX <- NULL
 census2011_education$AGE <- NULL
@@ -145,6 +147,8 @@ https://ec.europa.eu/eurostat/web/rural-development/data
 
 ## is having more regional predictors than individual predictors OK?
 
+try to minimize amounts of regional predictors, maybe 2-3
+
 ```{r estimate_preferences}
 library(rstanarm)
 
@@ -152,8 +156,9 @@ nat_resources <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>
   summarise(pro = sum(qa2_1 == 1), against = n() - pro) %>% na.omit()
 
 nat_resources <- merge(nat_resources, reg_preds_std, by = "NUTS_eb")
+nat_resources$country <- substr(nat_resources$NUTS, 1, 2)
 
-fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + density + area + higher_ed + hhd_income + unemp_pct, data = nat_resources, family = binomial(link = "logit"))
+fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct, data = nat_resources, family = binomial(link = "logit"))
 
 print(fit.nat_resources, digits = 3)
 ```
@@ -169,7 +174,8 @@ generate_region_estimates <- function(poststrat, fitted_model){
   region_preferences <- data.frame(
                           region = unique(poststrat$Region.Name),
                           pref = rep(-1, N),
-                          sd = rep(-1, N)
+                          se = rep(-1, N),
+                          country = rep("", N)
 )
 
   for (i in unique(poststrat$Region.Name)) {
@@ -187,14 +193,21 @@ generate_region_estimates <- function(poststrat, fitted_model){
 
     #This is the estimate for popn in state:
     region_preferences[region_preferences$region == i,]$pref <- round(mean(poststrat_prob_region), 4)
-    region_preferences[region_preferences$region == i,]$sd <- round(sd(poststrat_prob_region), 4)
-    
+    region_preferences[region_preferences$region == i,]$se <- round(sd(poststrat_prob_region), 4)
+    region_preferences[region_preferences$region == i,]$country <- unique(poststrat_region$country)
   }
   return(region_preferences)
 }
 
 
 nat_resources_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.nat_resources)
+
+ggplot(nat_resources_prefs, aes(x= region, y = pref, group = 1, color = country)) + geom_point() + 
+  geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
+  theme_classic() +
+  ylim(0.2, 1) + 
+  ggtitle("") +
+  theme(axis.text.x = element_text(angle = 90))
 ```
 
 
@@ -207,7 +220,7 @@ https://mepsurvey.eu/data-objects/data/
 # MEP Survey data
 
 ```{r}
-
+mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/mep_data_with_IDs.csv")
 
 ```
 
