@@ -64,59 +64,13 @@ eb81.3$NUTS_eb <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr,
 
 eb81.3_filt <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
 
-# drop annoying columns
-eb81.3_filt[,grep("q1_", colnames(eb81.3_filt))] <- NULL          
-eb81.3_filt[,grep("eu|w", colnames(eb81.3_filt))] <- NULL  
-
-
 unique(eb81.3_filt$NUTS_eb)
 
 ```
 
 Step 2: Census
 ```{r}
-library(data.table)
-
-# nuts_dictionary <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/nuts_dictionary.csv")
-nuts_fr <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/NUTS_FR.csv")
-
-census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_education.csv")
-
-census2011_education$NUTS2_old <- census2011_education$GEO
-
-reg_preds <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/regional_predictors.csv")
-
-reg_preds_std <- reg_preds %>% select(gdp_cap,density, area, higher_ed, hhd_income, unemp_pct) %>% robustHD::standardize()
-
-reg_preds_std <- cbind(reg_preds_std, reg_preds %>% select(NUTS, NUTS2_old, NUTS_eb, Region.Name))
-
-census2011_education <- merge(census2011_education, reg_preds_std, by = "NUTS2_old")
-# census2011_education <- merge(census2011_education, nuts_fr, by = "NUTS2", all.x = TRUE)
-
-census2011_education$CAS <- NULL
-census2011_education$TIME <- NULL
-census2011_education$SIE <- NULL
-census2011_education$LOC <- NULL
-census2011_education$FLAGS <- NULL
-census2011_education$FOOTNOTES <- NULL
-
-
-census2011_education$age_cat <- ifelse(census2011_education$AGE %in% c('Y18', 'Y19', 'Y20-24'), 'Y18-24', 
-                                       census2011_education$AGE)
-
-census2011_education$gender_male <- ifelse(census2011_education$SEX == 'M', 1,0 )
-census2011_education$edu <- with(census2011_education, ifelse(EDU == 'ED1', 1, ifelse(EDU == 'ED2', 2, ifelse(EDU == 'ED3', 3,
-                                    ifelse(EDU == 'ED4', 4, ifelse(EDU == 'ED5', 5, ifelse(EDU == 'ED6', 6, NA)))))))
-
-census2011_education$freq <- census2011_education$VALUE
-
-census2011_education$country <- substr(census2011_education$NUTS, 1, 2)
-
-census2011_education$GEO <- NULL
-census2011_education$SEX <- NULL
-census2011_education$AGE <- NULL
-census2011_education$EDU <- NULL
-census2011_education$VALUE <- NULL
+source("/Users/gabgilling/Documents/GitHub/Thesis/prepare_census.R")
 ```
 
 
@@ -152,15 +106,21 @@ try to minimize amounts of regional predictors, maybe 2-3
 ```{r estimate_preferences}
 library(rstanarm)
 
-nat_resources <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
-  summarise(pro = sum(qa2_1 == 1), against = n() - pro) %>% na.omit()
+eb81.3_filt$protect.env <- ifelse(eb81.3_filt$qa1 %in% c(1,2), 1, ifelse(eb81.3_filt$qa1 %in% c(3,4), 0, NA))
 
-nat_resources <- merge(nat_resources, reg_preds_std, by = "NUTS_eb")
-nat_resources$country <- substr(nat_resources$NUTS, 1, 2)
+protect.env <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(protect.env == 1), against = n() - pro) %>% na.omit()
 
-fit.nat_resources <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct, data = nat_resources, family = binomial(link = "logit"))
+protect.env <- merge(protect.env, reg_preds_std, by = "NUTS_eb")
+protect.env$country <- substr(protect.env$NUTS, 1, 2)
 
-print(fit.nat_resources, digits = 3)
+protect.env<- merge(protect.env, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+
+protect.env$Constituency <- ifelse(is.na(protect.env$Constituency), protect.env$Region.Name, protect.env$Constituency)
+
+fit.protect.env <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct, data = protect.env, family = binomial(link = "logit"))
+
+print(fit.protect.env, digits = 3)
 ```
 
 
@@ -169,13 +129,14 @@ print(fit.nat_resources, digits = 3)
 generate_region_estimates <- function(poststrat, fitted_model){
   
   ## generate state_df
-  N <- length(unique(poststrat$NUTS_eb))
+  N <- length(unique(poststrat$Region.Name))
   
   region_preferences <- data.frame(
-                          region = unique(poststrat$Region.Name),
+                          Region.Name = unique(poststrat$Region.Name),
+                          constituency = rep("", N),
+                          country = rep("", N),
                           pref = rep(-1, N),
-                          se = rep(-1, N),
-                          country = rep("", N)
+                          se = rep(-1, N)
 )
 
   for (i in unique(poststrat$Region.Name)) {
@@ -192,17 +153,21 @@ generate_region_estimates <- function(poststrat, fitted_model){
     poststrat_prob_region <- posterior_prob_region %*% poststrat_region$freq / sum(poststrat_region$freq)
 
     #This is the estimate for popn in state:
-    region_preferences[region_preferences$region == i,]$pref <- round(mean(poststrat_prob_region), 4)
-    region_preferences[region_preferences$region == i,]$se <- round(sd(poststrat_prob_region), 4)
-    region_preferences[region_preferences$region == i,]$country <- unique(poststrat_region$country)
+    region_preferences[region_preferences$Region.Name == i,]$pref <- round(mean(poststrat_prob_region), 4)
+    region_preferences[region_preferences$Region.Name == i,]$se <- round(sd(poststrat_prob_region), 4)
+    region_preferences[region_preferences$Region.Name == i,]$country <- unique(poststrat_region$country)
+    region_preferences[region_preferences$Region.Name == i,]$constituency <- unique(poststrat_region$Constituency)
   }
   return(region_preferences)
 }
 
 
-nat_resources_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.nat_resources)
+protect.env_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.protect.env)
 
-ggplot(nat_resources_prefs, aes(x= region, y = pref, group = 1, color = country)) + geom_point() + 
+protect.envs_prefs.r <- protect.env_prefs %>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+
+
+ggplot(protect.envs_prefs.r, aes(x= constituency, y = pref, group = 1, color = country)) + geom_point() + 
   geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
   theme_classic() +
   ylim(0.2, 1) + 
