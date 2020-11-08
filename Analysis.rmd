@@ -211,12 +211,35 @@ cond.ts <- sapply(MEP.data, function(x) grepl("2018-11", x$ts))
 
 #A8-0354/2018 CO2 emission performance standards for new heavy duty vehicles ***I	
 cond1 <- sapply(MEP.data, function(x) grepl("A8-0354/2018", x$title))
-
-cond2 <- sapply(dat, function(x) grepl("Proposition", x$title))
-
 dat <- MEP.data[cond1]
+cond2 <- sapply(dat, function(x) grepl("Proposition", x$title))
+A8.0354<- dat[cond2][[1]]
 
-dat2 <- dat[cond2]
+mep.ids$env1 <- 0
+
+for (i in A8.0354$votes$`+`$groups){
+  for (id in unname(unlist(i))){
+    if (!id %in% unique(mep.ids$ID)){
+      next
+    }
+    else {
+    mep.ids[mep.ids$ID == id,]$env1 <- 1
+      }
+   }
+}
+
+for (i in A8.0354$votes$`-`$groups){
+  for (id in unname(unlist(i))){
+    if (!id %in% unique(mep.ids$ID)){
+      next
+    }
+    else {
+    mep.ids[mep.ids$ID == id,]$env1 <- -1
+      }
+   }
+}
+
+
 
 dat2[[1]]$votes$`+`
 
