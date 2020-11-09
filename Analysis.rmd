@@ -187,21 +187,24 @@ https://mepsurvey.eu/data-objects/data/
 ```{r}
 mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/mep_data_with_IDs.csv")
 
+mep.ids$date_begin <- as.Date(mep.ids$date_begin, format = "%m/%d/%y")
+mep.ids$date_end <- as.Date(mep.ids$date_end, format = "%m/%d/%y")
 mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% 
           c("Massif-central–Central", "Massif Central-Centre",  "Massif central-Centre","Massif central – Centre"),
           "Massif-central-Centre", constituency))
 
 mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Île-de-France", "Ile-de-France"), "Ile de France" , constituency))
 
-mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Est", "East France" , constituency))
+mep.ids$Parliament <- with(mep.ids, ifelse(date_begin >= "2004-07-20" & date_end <= "2009-06-07", 6, 
+                                    ifelse(date_begin > "2009-06-07" & date_end <= "2014-07-14", 7,
+                                    ifelse(date_begin >= "2014-07-15" & date_end <= "2020-01-01", 8, Parliament))))
 
-mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Sud-Ouest", "South-West France" , constituency))
+# mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Est", "East France" , constituency))
+# mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Sud-Ouest", "South-West France" , constituency))
+# mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Ouest", "West"), "West France" , constituency))
+# mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest", ), "North-West France" , constituency))
+# mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest"), "North-West France" , constituency))
 
-mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Ouest", "West"), "West France" , constituency))
-
-mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest", ), "North-West France" , constituency))
-
-mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest"), "North-West France" , constituency))
 ```
 
 # T4-0084/1995
@@ -209,7 +212,9 @@ mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest"), 
 Final votes tabulated as "Proposition"
 Amendments - "Am"
 
-Link regions to constituencies
+tabulate parliament group activities as additional control
+
+need to adjust for fact that some MEPs were not in parliament at that time
 
 ```{r}
 # install.packages("rjson")
@@ -228,32 +233,73 @@ cond.ts <- sapply(MEP.data, function(x) grepl("2018-11", x$ts))
 cond1 <- sapply(MEP.data, function(x) grepl("A8-0354/2018", x$title))
 dat <- MEP.data[cond1]
 cond2 <- sapply(dat, function(x) grepl("Proposition", x$title))
-A8.0354<- dat[cond2][[1]]
+A8.0354 <- dat[cond2][[1]]
+
+#A8-0249/2015 reduction of national emissions of certain atmospheric pollutants
+#https://www.europarl.europa.eu/doceo/document/TA-8-2016-0438_EN.html
+
+cond1 <- sapply(MEP.data, function(x) grepl("A8-0249/2015", x$title))
+dat <- MEP.data[cond1]
+cond2 <- sapply(dat, function(x) grepl("Résolution", x$title))
+A8.0249 <- dat[cond2][[1]]
+
 
 mep.ids$env1 <- 0
+mep.ids$env2 <- 0
 
-for (i in A8.0354$votes$`+`$groups){
+# need to subset by term
+
+for (i in env2$votes$`+`$groups){
   for (id in unname(unlist(i))){
-    if (!id %in% unique(mep.ids$ID)){
-      next
+    if (id %in% unique(mep.ids$ID)){
+      mep.ids[mep.ids$ID == id,]$env2 <- 1
     }
-    else {
-    mep.ids[mep.ids$ID == id,]$env1 <- 1
-      }
-   }
+  }
 }
 
-for (i in A8.0354$votes$`-`$groups){
+for (i in env2$votes$`-`$groups){
   for (id in unname(unlist(i))){
-    if (!id %in% unique(mep.ids$ID)){
-      next
+    if (id %in% unique(mep.ids$ID)){
+      mep.ids[mep.ids$ID == id,]$env2 <- -1
     }
-    else {
-    mep.ids[mep.ids$ID == id,]$env1 <- -1
-      }
-   }
+  }
 }
 
+mep.ids$env1 <- with(mep.ids, ifelse(Parliament != 8, NA, env1))
+mep.ids$env2 <- with(mep.ids, ifelse(Parliament != 8, NA, env2))
 
+```
+
+```{r}
+
+count_votes <- function(resolution_name, col_name){
+  mep.ids[col_name] <- 0
+  # print(get(resolution_name))
+  resolution = get(resolution_name)
+  for (i in resolution$votes$`+`$groups){
+    for (id in unname(unlist(i))){
+      if (id %in% unique(mep.ids$ID)){
+        mep.ids[mep.ids$ID == id,][col_name] <- 1
+      }
+    }
+  }
+  
+  for (i in resolution$votes$`-`$groups){
+    for (id in unname(unlist(i))){
+      if (id %in% unique(mep.ids$ID)){
+        mep.ids[mep.ids$ID == id,][col_name]- -1
+      }
+    }
+  }
+}
+
+count_votes(resolution_name = "A8.0249", "env2")
+count_votes(resolution_name = "A8.0354", "env1")
+
+```
+
+
+```{r}
+mep.ids %>% group_by(constituency) %>% summarise(mep_pref = mean())
 ```
 

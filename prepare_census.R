@@ -91,5 +91,5 @@ census2011_education$Constituency <- with(census2011_education,
 census2011_education$Constituency <- with(census2011_education, 
                                           ifelse(Constituency == "West Midlands (UK)"  , "West Midlands", Constituency))
 
-write.csv(census2011_education, "/Users/gabgilling/Documents/GitHub/Thesis/Data/census_edu_predictors.csv")
+# write.csv(census2011_education, "/Users/gabgilling/Documents/GitHub/Thesis/Data/census_edu_predictors.csv")
 
