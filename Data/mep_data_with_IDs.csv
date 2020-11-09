@@ -256,7 +256,7 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/14/09,7/14/14,Mary Honeyball,London,Labour,Party of European Socialists,,5846
 7/15/14,7/1/19,Mary Honeyball,London,Labour,Party of European Socialists,,5846
 7/20/04,6/7/09,Claude Moraes,London,Labour,Party of European Socialists,,4519
-7/14/09,7/15/14,Claude Moraes,London,Labour,Party of European Socialists,,4519
+7/14/09,7/14/14,Claude Moraes,London,Labour,Party of European Socialists,,4519
 7/15/14,7/1/19,Claude Moraes,London,Labour,Party of European Socialists,,4519
 7/20/04,6/7/09,Sarah Ludford,London,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4529
 7/14/09,7/14/14,Sarah Ludford,London,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4529
@@ -300,7 +300,7 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/14/09,7/14/14,Richard Ashworth,South-East England,Conservative,European Conservatives and Reformists Party,,28132
 7/15/14,7/1/19,Richard Ashworth,South-East England,Conservative,European Conservatives and Reformists Party,,28132
 7/20/04,5/12/05,Chris Huhne,South-East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4523
-5/12/05,7/14/09,Sharon Bowles,South-East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,33570
+5/12/05,6/7/09,Sharon Bowles,South-East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,33570
 7/14/09,7/14/14,Sharon Bowles,South-East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,33570
 7/15/14,7/1/19,Janice Atkinson,South-East England,UKIP,Europe of Freedom and Direct Democracy,,124938
 7/20/04,6/7/09,"Emma Nicholson, Baroness Nicholson of Winterbourne",South-East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4522
@@ -359,7 +359,8 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/14/09,7/14/14,Michael Cashman,West Midlands,Labour,Party of European Socialists,,4532
 7/15/14,7/1/19,Siôn Simon,West Midlands,Labour,Party of European Socialists,,124948
 7/20/04,6/7/09,Phillip Whitehead,East Midlands,Labour,Party of European Socialists,,2174
-7/14/09,10/3/17,Glenis Willmott,East Midlands,Labour,Party of European Socialists,,35743
+7/14/09,7/14/14,Glenis Willmott,East Midlands,Labour,Party of European Socialists,,35743
+7/15/14,10/3/17,Glenis Willmott,East Midlands,Labour,Party of European Socialists,,35743
 10/4/17,7/1/19,Rory Palmer,East Midlands,Labour,Party of European Socialists,,190099
 7/20/04,6/7/09,Derek Clark,East Midlands,UKIP,Independence/Democracy,,28493
 7/14/09,7/14/14,Derek Clark,East Midlands,UKIP,Europe of Nations and Freedom,,28493
@@ -387,11 +388,11 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/15/14,7/1/19,Steven Woolfe,North West England,UKIP,Europe of Freedom and Direct Democracy,,124966
 7/20/04,6/7/09,David Sumberg,North West England,Conservative,European Conservatives and Reformists Party,,4539
 7/14/09,7/14/14,Jacqueline Foster,North West England,Conservative,European Conservatives and Reformists Party,,4553
-7/14/09,7/1/19,Jacqueline Foster,North West England,Conservative,European Conservatives and Reformists Party,,4553
+7/15/14,7/1/19,Jacqueline Foster,North West England,Conservative,European Conservatives and Reformists Party,,4553
 7/20/04,11/26/07,Saj Karim,North West England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,28481
 11/26/07,6/7/09,Saj Karim,North West England,Conservative,European Conservatives and Reformists Party,,28481
-7/14/09,7/15/14,Saj Karim,North West England,Conservative,European Conservatives and Reformists Party,,28481
-7/6/05,7/1/19,Saj Karim,North West England,Conservative,European Conservatives and Reformists Party,,28481
+7/14/09,7/14/14,Saj Karim,North West England,Conservative,European Conservatives and Reformists Party,,28481
+7/15/14,7/1/19,Saj Karim,North West England,Conservative,European Conservatives and Reformists Party,,28481
 7/20/04,6/7/09,Chris Davies,North West England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4554
 7/15/14,6/8/17,M. Afzal Khan,North West England,Labour,Party of European Socialists,,124962
 6/8/17,7/1/19,Wajid Khan,North West England,Labour,Party of European Socialists,,188624
@@ -408,14 +409,14 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/14/09,7/14/14,Martin Callanan,North East England,Conservative,European Conservatives and Reformists Party,,4536
 7/15/14,7/1/19,Jonathan Arnott,North East England,UKIP,Europe of Freedom and Direct Democracy,,124958
 7/20/04,6/7/09,Fiona Hall,North East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,28477
-7/14/09,7/15/14,Fiona Hall,North East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,28477
+7/14/09,7/14/14,Fiona Hall,North East England,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,28477
 7/15/14,7/1/19,Paul Brannen,North East England,Labour,Party of European Socialists,,124954
 7/20/04,6/7/09,Stephen Hughes,North East England,Labour,Party of European Socialists,,1407
 7/14/09,7/14/14,Stephen Hughes,North East England,Labour,Party of European Socialists,,1407
 7/15/14,7/1/19,Judith Kirton-Darling,North East England,Labour,Party of European Socialists,,124953
 7/20/04,6/7/09,Diana Wallis,Yorkshire and the Humber,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4544
 7/14/09,3/8/12,Diana Wallis,Yorkshire and the Humber,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,4544
-3/8/12,7/15/14,Rebecca Taylor,Yorkshire and the Humber,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,112620
+3/8/12,7/14/14,Rebecca Taylor,Yorkshire and the Humber,Liberal Democrat,Alliance of Liberals and Democrats for Europe Party,,112620
 7/15/14,7/1/19,Mike Hookem,Yorkshire and the Humber,UKIP,Europe of Freedom and Direct Democracy,,124957
 7/20/04,6/7/09,Edward McMillan-Scott,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,1405
 7/14/09,1/3/10,Edward McMillan-Scott,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,1405
@@ -426,7 +427,7 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/15/14,1/24/15,Amjad Bashir,Yorkshire and the Humber,UKIP,Europe of Freedom and Direct Democracy,,124956
 1/24/15,7/1/19,Amjad Bashir,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,124956
 7/20/04,6/7/09,Timothy Kirkhope,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,4542
-7/14/09,2014,Timothy Kirkhope,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,4542
+7/14/09,7/14/14,Timothy Kirkhope,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,4542
 7/15/14,9/1/16,Timothy Kirkhope,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,4542
 9/1/16,7/1/19,John Procter,Yorkshire and the Humber,Conservative,European Conservatives and Reformists Party,,185628
 7/20/04,6/7/09,Richard Corbett,Yorkshire and the Humber,Labour,Party of European Socialists,,2309
@@ -461,10 +462,10 @@ date_begin,date_end,Name,constituency,Local Party,Group,Parliament,ID
 7/14/09,7/14/14,Ian Hudghton,Scotland,SNP,European Free Alliance,,2338
 7/15/14,7/1/19,Ian Hudghton,Scotland,SNP,European Free Alliance,,2338
 7/20/04,6/7/09,David Martin,Scotland,Labour,Party of European Socialists,,1403
-7/14/09,2014,David Martin,Scotland,Labour,Party of European Socialists,,1403
+7/14/09,7/14/14,David Martin,Scotland,Labour,Party of European Socialists,,1403
 7/15/14,7/1/19,David Martin,Scotland,Labour,Party of European Socialists,,1403
 7/20/04,6/7/09,Catherine Stihler,Scotland,Labour,Party of European Socialists,,4545
-7/14/09,2014,Catherine Stihler,Scotland,Labour,Party of European Socialists,,4545
+7/14/09,7/14/14,Catherine Stihler,Scotland,Labour,Party of European Socialists,,4545
 7/15/14,7/1/19,Catherine Stihler,Scotland,Labour,Party of European Socialists,,4545
 7/20/04,6/7/09,John Purvis,Scotland,Conservative,European Conservatives and Reformists Party,,729
 7/20/04,6/7/09,Jim Allister,Northern Ireland,Traditional Unionist Voice,Non-Inscrits,,28512
