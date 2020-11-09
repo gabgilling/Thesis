@@ -187,6 +187,21 @@ https://mepsurvey.eu/data-objects/data/
 ```{r}
 mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/mep_data_with_IDs.csv")
 
+mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% 
+          c("Massif-central–Central", "Massif Central-Centre",  "Massif central-Centre","Massif central – Centre"),
+          "Massif-central-Centre", constituency))
+
+mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Île-de-France", "Ile-de-France"), "Ile de France" , constituency))
+
+mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Est", "East France" , constituency))
+
+mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Sud-Ouest", "South-West France" , constituency))
+
+mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Ouest", "West"), "West France" , constituency))
+
+mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest", ), "North-West France" , constituency))
+
+mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Nord-Ouest"), "North-West France" , constituency))
 ```
 
 # T4-0084/1995
