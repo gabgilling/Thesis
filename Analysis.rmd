@@ -30,6 +30,7 @@ qb1: EDUCATION
 
 
 ```{r}
+options(dplyr.summarise.inform=F) 
 library(haven)
 library(dplyr)
 library(robustHD)
@@ -243,31 +244,6 @@ dat <- MEP.data[cond1]
 cond2 <- sapply(dat, function(x) grepl("Résolution", x$title))
 A8.0249 <- dat[cond2][[1]]
 
-
-mep.ids$env1 <- 0
-mep.ids$env2 <- 0
-
-# need to subset by term
-
-for (i in env2$votes$`+`$groups){
-  for (id in unname(unlist(i))){
-    if (id %in% unique(mep.ids$ID)){
-      mep.ids[mep.ids$ID == id,]$env2 <- 1
-    }
-  }
-}
-
-for (i in env2$votes$`-`$groups){
-  for (id in unname(unlist(i))){
-    if (id %in% unique(mep.ids$ID)){
-      mep.ids[mep.ids$ID == id,]$env2 <- -1
-    }
-  }
-}
-
-mep.ids$env1 <- with(mep.ids, ifelse(Parliament != 8, NA, env1))
-mep.ids$env2 <- with(mep.ids, ifelse(Parliament != 8, NA, env2))
-
 ```
 
 ```{r}
@@ -291,15 +267,22 @@ count_votes <- function(resolution_name, col_name){
       }
     }
   }
+  return(mep.ids)
 }
 
-count_votes(resolution_name = "A8.0249", "env2")
-count_votes(resolution_name = "A8.0354", "env1")
+mep.ids$env1 <- 0
+mep.ids$env2 <- 0
+
+mep.ids <- count_votes(resolution_name = "A8.0249", "env2")
+mep.ids <- count_votes(resolution_name = "A8.0354", "env1")
+
+mep.ids$env1 <- with(mep.ids, ifelse(Parliament != 8, NA, env1))
+mep.ids$env2 <- with(mep.ids, ifelse(Parliament != 8, NA, env2))
 
 ```
 
 
 ```{r}
-mep.ids %>% group_by(constituency) %>% summarise(mep_pref = mean())
+ggplot(mep.ids %>% group_by(constituency, Parliament) %>% summarise(mep_pref = mean(env1+env2), mep_se = sd(env1+env2) / sqrt(length(env1+env2))) %>% na.omit(), aes(x = constituency, y = mep_pref)
 ```
 
