@@ -240,34 +240,5 @@ for (i in A8.0354$votes$`-`$groups){
 }
 
 
-
-dat2[[1]]$votes$`+`
-
-dat[[1]]$votes$`+`$groups$ALDE[[1]]$mepid
-
-dat[[4]]$title
 ```
-
-II. Get regional level preferences for FR/UK/GE using EB 
-
-Discrimination in the EU in 2015
-
-
-III. Poststratify using Eurostat.
-
-```{r}
-library(haven)
-library(tidyverse)
-eb <- read_dta("/Users/gabgilling/Downloads/ZA5998_v2-0-0.dta")
-table(eb$nuts)
-str(eb)
-
-ess <- read_dta("/Users/gabgilling/Downloads/ESS8e02_1.stata/ESS8e02_1.dta")
-ess.f <- ess %>% filter(cntry == "FR") %>% select(regunit, impenv)
-ess.f
-```
-
-https://en.wikipedia.org/wiki/European_Parliament_constituency#United_Kingdom
-
-https://en.wikipedia.org/wiki/European_Parliament_constituencies_in_France
 
