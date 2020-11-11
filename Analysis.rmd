@@ -78,10 +78,6 @@ source("/Users/gabgilling/Documents/GitHub/Thesis/prepare_census.R")
 Step 3: Get regional and country level predictors
 
 https://ec.europa.eu/eurostat/web/regions/data/database
-```{r}
-
-source(prepare.)
-```
 
 "We add regional-level predictors from Eurostat to improve the model fit. We retrieve complete
 regional data on GDP per capita, area size, population density, tertiary education shares, and
