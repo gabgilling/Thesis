@@ -49,8 +49,7 @@ The following function uses rstanarm's posterior_epred() function to estimate op
 
 
 `generate_region_estimates <- function(poststrat, fitted_model){
-  
-  ## generate state_df
+  #generate state_df
   N <- length(unique(poststrat$Region.Name))
   
   region_preferences <- data.frame(
@@ -70,7 +69,6 @@ The following function uses rstanarm's posterior_epred() function to estimate op
       draws = 1000,
       newdata = as.data.frame(poststrat_region)
     )
-    
     poststrat_prob_region <- posterior_prob_region %*% poststrat_region$freq / sum(poststrat_region$freq)
 
     #This is the estimate for popn in state:
