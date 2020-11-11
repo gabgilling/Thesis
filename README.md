@@ -48,7 +48,8 @@ Code to wrangle and set up the census datafile can be found in the [prepare_cens
 The following function uses rstanarm's posterior_epred() function to estimate opinions: we are simulating 1000 draws from the posterior distribution of our estimated coefficients and then weighting them with the true distribution of each demographic combination in the regional populations.
 
 
-`generate_region_estimates <- function(poststrat, fitted_model){
+`
+generate_region_estimates <- function(poststrat, fitted_model){
   
   ## generate state_df
   N <- length(unique(poststrat$Region.Name))
