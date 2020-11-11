@@ -80,7 +80,7 @@ Step 3: Get regional and country level predictors
 https://ec.europa.eu/eurostat/web/regions/data/database
 ```{r}
 
-
+source(prepare.)
 ```
 
 "We add regional-level predictors from Eurostat to improve the model fit. We retrieve complete
@@ -99,6 +99,8 @@ maybe racial / religious predictors
 
 https://ec.europa.eu/eurostat/web/rural-development/data
 
+https://www.gesis.org/en/eurobarometer-data-service/search-data-access/topics
+https://www.kaggle.com/ruslankl/european-union-lgbt-survey-2012?select=LGBT_Survey_Discrimination.csv
 
 ## is having more regional predictors than individual predictors OK?
 
@@ -171,7 +173,7 @@ protect.envs_prefs.r <- protect.env_prefs %>% group_by(constituency, country) %>
 ggplot(protect.envs_prefs.r, aes(x= constituency, y = pref, group = 1, color = country)) + geom_point() + 
   geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
   theme_classic() +
-  ylim(0.2, 1) + 
+  ylim(0.6, 1) + 
   ggtitle("") +
   theme(axis.text.x = element_text(angle = 90))
 ```
@@ -244,6 +246,15 @@ dat <- MEP.data[cond1]
 cond2 <- sapply(dat, function(x) grepl("Résolution", x$title))
 A8.0249 <- dat[cond2][[1]]
 
+#A8-0317/2018 
+#reduction of the impact of certain plastic products on the environment
+#https://www.europarl.europa.eu/doceo/document/A-8-2018-0317_EN.html
+
+# A7-0294/2012
+# establishment of a Programme for the Environment and Climate Action (LIFE)
+# https://www.europarl.europa.eu/doceo/document/A-7-2012-0294_EN.html?redirect
+
+# https://eur-lex.europa.eu/legal-content/en/HIS/?uri=CELEX:32008L0050
 ```
 
 ```{r}
@@ -283,6 +294,44 @@ mep.ids$env2 <- with(mep.ids, ifelse(Parliament != 8, NA, env2))
 
 
 ```{r}
-ggplot(mep.ids %>% group_by(constituency, Parliament) %>% summarise(mep_pref = mean(env1+env2), mep_se = sd(env1+env2) / sqrt(length(env1+env2))) %>% na.omit(), aes(x = constituency, y = mep_pref)
+ggplot(mep.ids %>% group_by(constituency, Parliament, country) %>% 
+       summarise(mep_pref = mean(env1+env2), mep_se = sd(env1+env2) / sqrt(length(env1+env2))) %>% na.omit(), 
+       aes(x = constituency, y = mep_pref, color = country)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin= mep_pref - mep_se, ymax= mep_pref + mep_se), width=0) + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r warning=FALSE}
+library(rgdal)
+library(broom)
+library(maptools)
+library(ggplot2)
+
+# install.packages('rgeos', type='source')
+# install.packages('rgdal', type='source')
+
+NUTS_shape = readOGR(dsn = "/Users/gabgilling/Desktop/NUTS_2013_01M_SH/data/")
+
+NUTS_shape2 = readOGR(dsn = "/Users/gabgilling/Desktop/NUTS_2013_01M_SH/data/", layer = "NUTS_RG_01M_2013")
+
+nuts <- readOGR(dsn = "/Users/gabgilling/Desktop/NUTS_2013_01M_SH/data/NUTS_RG_01M_2013.shp")
+
+nuts <- nuts[nuts$STAT_LEVL_ %in% c(1,2),]
+nuts <- nuts[grepl("FR|UK|IT",nuts$NUTS_ID),]
+
+# plot(nuts)
+shp_df <- fortify(nuts, region = "NUTS_ID")
+
+shp_df <- shp_df %>% filter(id %in% c("FR", "UK", "IT"))
+
+# NUTS_shape2@data$LAT <- NUTS_shape@data$LAT
+# NUTS_shape2@data$LON <- NUTS_shape@data$LON
+# 
+# NUTS_fort <- tidy(NUTS_shape)
+ggplot() + geom_polygon(data= shp_df, aes(x = long, y = lat, group = group, color = id))
+
+plot(NUTS_shape)
 ```
 
