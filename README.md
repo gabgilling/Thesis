@@ -85,7 +85,7 @@ The following function uses rstanarm's posterior_epred() function to estimate op
 ` 
 
 The results are plotted below:
-[env_prefs](/Plots/env_prefs_plot.jpg)
+![env_prefs](/Plots/env_prefs_plot.jpg)
  
 
 
