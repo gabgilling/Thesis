@@ -22,25 +22,70 @@ See the literature reviews and project proposals in the repo for more detailed e
 ### 1. Getting survey data and fitting the multi-level models.
 
 All survey data comes from Eurobarometer.
-A database containing all of the raw survey data and associated codebooks can be found on the [GESIS website](https://www.gesis.org/en/eurobarometer-data-service/search-data-access/topics)
+A database containing all of the raw survey data and associated codebooks can be found on the [GESIS website](https://www.gesis.org/en/eurobarometer-data-service/search-data-access/topics).
 
 I filter the raw data and recode the dataframe (see Analysis.rmd).
 
 I then fit a multi-level model on a set of individual questions. For instance, Eurobarometer 81.3 asks respondents whether the environment should be protected by regulations.
 
 First, I tally responses by demographic variables and regions.
+
 `protect.env <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
   summarise(pro = sum(protect.env == 1), against = n() - pro) %>% na.omit()`
 
 After some extra wrangling I can finally run the model:
+
 `fit.protect.env <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct, data = protect.env, family = binomial(link = "logit"))`
 
 In this thesis I will conducting my analyses using a Bayesian framework (see project proposal). stan_glmer performs the same way as lme4's glm function call, with random effects for variable _x_ specified with the (1| _x_) notation.
 
 ### 2. Poststratification
 
-The census data is sourced directly from [Eurostat](https://ec.europa.eu/eurostat/web/population-and-housing-census/census-data/2011-census)
+The census data is sourced directly from [Eurostat](https://ec.europa.eu/eurostat/web/population-and-housing-census/census-data/2011-census).
 
+Code to wrangle and set up the census datafile can be found in the [prepare_census.R] (https://github.com/gabgilling/Thesis/blob/master/prepare_census.R) file.
+
+The following function uses rstanarm's posterior_epred() function to estimate opinions: we are simulating 1000 draws from the posterior distribution of our estimated coefficients and then weighting them with the true distribution of each demographic combination in the regional populations.
+
+
+`generate_region_estimates <- function(poststrat, fitted_model){
+  
+  ## generate state_df
+  N <- length(unique(poststrat$Region.Name))
+  
+  region_preferences <- data.frame(
+                          Region.Name = unique(poststrat$Region.Name),
+                          constituency = rep("", N),
+                          country = rep("", N),
+                          pref = rep(-1, N),
+                          se = rep(-1, N)
+)
+
+  for (i in unique(poststrat$Region.Name)) {
+    print(i)
+    poststrat_region <- poststrat[poststrat$Region.Name == i, ]
+    
+    posterior_prob_region <- posterior_epred(
+      fitted_model,
+      # transform = TRUE,
+      draws = 1000,
+      newdata = as.data.frame(poststrat_region)
+    )
+    
+    poststrat_prob_region <- posterior_prob_region %*% poststrat_region$freq / sum(poststrat_region$freq)
+
+    #This is the estimate for popn in state:
+    region_preferences[region_preferences$Region.Name == i,]$pref <- round(mean(poststrat_prob_region), 4)
+    region_preferences[region_preferences$Region.Name == i,]$se <- round(sd(poststrat_prob_region), 4)
+    region_preferences[region_preferences$Region.Name == i,]$country <- unique(poststrat_region$country)
+    region_preferences[region_preferences$Region.Name == i,]$constituency <- unique(poststrat_region$Constituency)
+  }
+  return(region_preferences)
+}
+` 
+
+The results are plotted below:
+[env_prefs](/plots/env_prefs_plot.jpg)
  
 
 

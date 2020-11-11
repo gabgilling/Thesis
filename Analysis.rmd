@@ -166,12 +166,14 @@ protect.env_prefs <- generate_region_estimates(poststrat = census2011_education 
 protect.envs_prefs.r <- protect.env_prefs %>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
 
 
-ggplot(protect.envs_prefs.r, aes(x= constituency, y = pref, group = 1, color = country)) + geom_point() + 
+env_prefs_plot <- ggplot(protect.envs_prefs.r, aes(x= constituency, y = pref, group = 1, color = country)) + geom_point() + 
   geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
   theme_classic() +
   ylim(0.6, 1) + 
   ggtitle("") +
   theme(axis.text.x = element_text(angle = 90))
+
+# ggsave("/Users/gabgilling/Documents/GitHub/Thesis/Plots/env_prefs_plot.jpg")
 ```
 
 
