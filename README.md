@@ -1,4 +1,4 @@
-# Thesis documentation for _Mr. P Visits Brussels: An Investigation of the Democratic Deficit in the European Union_
+# Thesis documentation for _Mr. P Visits Brussels: Investigating the Democratic Deficit in the European Union_
 
 The goal of this thesis is to investigate the democratic deficit in the European Union by using Multi-level Regression and Poststratification (MRP) to quantify regional level preferences on a set of salient issues surrounding environmental regulations. I have chosen that topic because it has both large amounts of 1) polling conducted on the matter 2) legislation voted on in the E.U. Parliament. I will potentially look into more topics (LGTBQ+ rights, immigration, trade) if time allows.
 
