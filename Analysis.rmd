@@ -42,24 +42,32 @@ library(forcats)
 eb81.3 <- read_dta("/Users/gabgilling/Downloads/ZA5914_v3-0-0.dta")
 
 eb81.3$gender_male <- ifelse(eb81.3$d10 == 2, 1, 0)
-eb81.3$age_cat <- with(eb81.3, ifelse(d11 >= 18 & d11 < 25, "Y18-24",
+
+# for education census
+eb81.3$age_cat1 <- with(eb81.3, ifelse(d11 >= 18 & d11 < 25, "Y18-24",
                                ifelse(d11 >= 25 & d11 < 30, "Y25-29",
                                ifelse( d11 >= 30 & d11 < 50, "Y30-49",
                                       ifelse(d11 >= 50 & d11 < 65, "Y50-64",
                                       ifelse(d11 >= 65 & d11 < 85, "Y65-84",
                                       ifelse(d11 >= 85, "Y_GE85",
                                       NA)))))))
+# for marital status census
+eb81.3$age_cat2 <- with(eb81.3, ifelse(d11 >= 15 & d11 < 30, "Y15-29",
+                               ifelse(d11 >= 30 & d11 < 50, "Y30-49",
+                               ifelse( d11 >= 50 & d11 < 65, "Y50-64",
+                                      ifelse(d11 >= 65 & d11 < 85, "Y65-84",
+                                      ifelse(d11 >= 85, "Y_GE85",
+                                      NA))))))
+
+eb81.3$ms <- with(eb81.3, ifelse(d7 %in% c(1,2,3,4), "MAR",
+                          ifelse(d7 %in% c(5,6,7,8), "REP",
+                          ifelse(d7 %in% c(9,10), "SIN",
+                          ifelse(d7 %in% c(11,12), "DIV",
+                          ifelse(d7 %in% c(13,14), "WID",
+                          NA))))))
                                       
                                       
 eb81.3$edu <- eb81.3$qb1
-
-# eb81.3$nuts1 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr_r, sep = ""), 
-#                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb_r, sep = ""),
-#                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it_r1, sep = ""), NA))))
-# 
-# eb81.3$nuts2 <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
-#                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
-#                       ifelse(isocntry == "IT", paste("IT", eb81.3$p7it, sep = ""), NA))))
 
 eb81.3$NUTS_eb <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
@@ -68,7 +76,14 @@ eb81.3$NUTS_eb <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr,
 
 eb81.3_filt <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
 
-unique(eb81.3_filt$NUTS_eb)
+eb75.2 <- read_dta("/Users/gabgilling/Downloads/ZA5480_v4-0-1.dta")
+
+eb75.2 <- eb75.2 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
+
+#v668 IT NUTS 1, v660 FR NUTS 2, v673 NUTS1 UK
+#v601 gender v602 age
+
+
 
 ```
 
