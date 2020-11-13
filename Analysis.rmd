@@ -24,6 +24,8 @@ QA2: what important issues in env ... binary
 QA3: knowledge about env 5pt scale -- control variable?
 QA12 to QA18
 
+
+QA18!
 Skills and qualifications: QB1 to QB23
 
 qb1: EDUCATION
@@ -35,6 +37,7 @@ library(haven)
 library(dplyr)
 library(robustHD)
 library(ggplot2)
+library(forcats)
 
 eb81.3 <- read_dta("/Users/gabgilling/Downloads/ZA5914_v3-0-0.dta")
 
@@ -79,18 +82,6 @@ Step 3: Get regional and country level predictors
 
 https://ec.europa.eu/eurostat/web/regions/data/database
 
-"We add regional-level predictors from Eurostat to improve the model fit. We retrieve complete
-regional data on GDP per capita, area size, population density, tertiary education shares, and
-median household income. We use all regional predictors in the BART model, because the
-Bayesian back-fitting algorithm does select on the most relevant predictors. However, we have
-to select manually some variables for the multi-level regressions to avoid overfitting. Therefore,
-we choose a parsimonious set of predictors for the regression-based methods. Here, we account
-for the effect of economic conditions on EU trust (Foster and Frieden, 2017), adding the regional
-GDP. Moreover, we add a variable measuring whether a region lies in eastern, western, northern or southern Europe (“grand region”)"
-
-## Add country-level predictors
-maybe racial / religious predictors
-
 ## add marital status 
 
 https://ec.europa.eu/eurostat/web/rural-development/data
@@ -105,19 +96,82 @@ try to minimize amounts of regional predictors, maybe 2-3
 ```{r estimate_preferences}
 library(rstanarm)
 
+eb81.3_filt$eu.leg <- ifelse(eb81.3_filt$qa18_1 %in% c(1,2), 1, ifelse(eb81.3_filt$qa18_1 %in% c(3,4), 0, NA))
+eb81.3_filt$eu.enf <- ifelse(eb81.3_filt$qa18_2 %in% c(1,2), 1, ifelse(eb81.3_filt$qa18_2 %in% c(3,4), 0, NA))
+eb81.3_filt$eu.asst <- ifelse(eb81.3_filt$qa18_3 %in% c(1,2), 1, ifelse(eb81.3_filt$qa18_3 %in% c(3,4), 0, NA))
+eb81.3_filt$eu.fund <- ifelse(eb81.3_filt$qa18_4 %in% c(1,2), 1, ifelse(eb81.3_filt$qa18_4 %in% c(3,4), 0, NA))
+eb81.3_filt$cooperation <- ifelse(eb81.3_filt$qa15 == 2, 1, ifelse(eb81.3_filt$qa15 == 1, 0, NA))
+eb81.3_filt$envorecon <- ifelse(eb81.3_filt$qa14 == 1, 1, ifelse(eb81.3_filt$qa15 == 2, 0, NA))
+
 eb81.3_filt$protect.env <- ifelse(eb81.3_filt$qa1 %in% c(1,2), 1, ifelse(eb81.3_filt$qa1 %in% c(3,4), 0, NA))
 
 protect.env <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
   summarise(pro = sum(protect.env == 1), against = n() - pro) %>% na.omit()
-
 protect.env <- merge(protect.env, reg_preds_std, by = "NUTS_eb")
 protect.env$country <- substr(protect.env$NUTS, 1, 2)
-
 protect.env<- merge(protect.env, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
-
 protect.env$Constituency <- ifelse(is.na(protect.env$Constituency), protect.env$Region.Name, protect.env$Constituency)
 
-fit.protect.env <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = protect.env, family = binomial(link = "logit"))
+eu.leg <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(eu.leg == 1), against = n() - pro) %>% na.omit()
+eu.leg <- merge(eu.leg, reg_preds_std, by = "NUTS_eb")
+eu.leg$country <- substr(eu.leg$NUTS, 1, 2)
+eu.leg<- merge(eu.leg, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+eu.leg$Constituency <- ifelse(is.na(eu.leg$Constituency), eu.leg$Region.Name, eu.leg$Constituency)
+
+eu.enf <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(eu.enf == 1), against = n() - pro) %>% na.omit()
+eu.enf <- merge(eu.enf, reg_preds_std, by = "NUTS_eb")
+eu.enf$country <- substr(eu.enf$NUTS, 1, 2)
+eu.enf<- merge(eu.enf, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+eu.enf$Constituency <- ifelse(is.na(eu.enf$Constituency), eu.enf$Region.Name, eu.enf$Constituency)
+
+eu.asst <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(eu.asst == 1), against = n() - pro) %>% na.omit()
+
+eu.asst <- merge(eu.asst, reg_preds_std, by = "NUTS_eb")
+eu.asst$country <- substr(eu.asst$NUTS, 1, 2)
+eu.asst<- merge(eu.asst, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+eu.asst$Constituency <- ifelse(is.na(eu.asst$Constituency), eu.asst$Region.Name, eu.enf$Constituency)
+
+eu.fund <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(eu.fund == 1), against = n() - pro) %>% na.omit()
+
+eu.fund <- merge(eu.fund, reg_preds_std, by = "NUTS_eb")
+eu.fund$country <- substr(eu.fund$NUTS, 1, 2)
+eu.fund<- merge(eu.fund, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+eu.fund$Constituency <- ifelse(is.na(eu.fund$Constituency), eu.fund$Region.Name, eu.enf$Constituency)
+
+cooperation <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(cooperation == 1), against = n() - pro) %>% na.omit()
+
+cooperation <- merge(cooperation, reg_preds_std, by = "NUTS_eb")
+cooperation$country <- substr(cooperation$NUTS, 1, 2)
+cooperation<- merge(cooperation, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+cooperation$Constituency <- ifelse(is.na(cooperation$Constituency), cooperation$Region.Name, cooperation$Constituency)
+
+envorecon <- eb81.3_filt %>% group_by(age_cat, gender_male, edu, NUTS_eb) %>%
+  summarise(pro = sum(envorecon == 1), against = n() - pro) %>% na.omit()
+
+envorecon <- merge(envorecon, reg_preds_std, by = "NUTS_eb")
+envorecon$country <- substr(envorecon$NUTS, 1, 2)
+envorecon<- merge(envorecon, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
+envorecon$Constituency <- ifelse(is.na(envorecon$Constituency), envorecon$Region.Name, envorecon$Constituency)
+
+fit.protect.env <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = protect.env, family = binomial(link = "logit"), refresh= 0)
+
+fit.eu.leg <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = eu.leg, family = binomial(link = "logit"), refresh= 0)
+
+fit.eu.enf <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = eu.enf, family = binomial(link = "logit"), refresh= 0)
+
+fit.eu.asst <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = eu.asst, family = binomial(link = "logit"), refresh= 0)
+
+fit.eu.fund <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = eu.fund, family = binomial(link = "logit"), refresh= 0)
+
+fit.cooperation <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = cooperation, family = binomial(link = "logit"), refresh= 0)
+
+fit.envorecon <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = envorecon, family = binomial(link = "logit"), refresh= 0)
+
 
 print(fit.protect.env, digits = 3)
 ```
@@ -162,18 +216,38 @@ generate_region_estimates <- function(poststrat, fitted_model){
 
 
 protect.env_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.protect.env)
+envorecon_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.envorecon)
+cooperation_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.cooperation)
+eu.asst_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.eu.asst)
+eu.enf_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.eu.enf)
+eu.fund_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.eu.fund)
+eu.leg_prefs <- generate_region_estimates(poststrat = census2011_education %>%  na.omit(), fit.eu.leg)
 
 protect.envs_prefs.r <- protect.env_prefs %>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+envorecon_prefs.r <- envorecon_prefs%>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+cooperation_prefs.r <- cooperation_prefs%>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+eu.asst_prefs.r <- eu.asst_prefs%>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+eu.enf_prefs.r <- eu.enf_prefs%>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+eu.fund_prefs.r <- eu.fund_prefs%>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+eu.leg_prefs.r <- eu.leg_prefs%>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se))
+
+agg_prefs <- rbind(protect.envs_prefs.r,envorecon_prefs.r,cooperation_prefs.r,eu.asst_prefs.r,eu.enf_prefs.r,eu.fund_prefs.r,eu.leg_prefs.r) %>% group_by(constituency, country) %>%  summarise(mean_pref = mean(pref), mean_se = mean(se))
 
 
-env_prefs_plot <- ggplot(protect.envs_prefs.r, aes(x= constituency, y = pref, group = 1, color = country)) + geom_point() + 
-  geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
+env_prefs_plot <- ggplot(agg_prefs,
+                         aes(x= reorder(constituency, mean_pref), y = mean_pref, color = country)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) + 
   theme_classic() +
-  ylim(0.6, 1) + 
+  # ylim(0.6, 1) + 
   ggtitle("") +
-  theme(axis.text.x = element_text(angle = 90))
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(x = "Constituency", y = "Mean Preference")
+
+env_prefs_plot
 
 # ggsave("/Users/gabgilling/Documents/GitHub/Thesis/Plots/env_prefs_plot.jpg")
+
 ```
 
 
@@ -186,7 +260,7 @@ https://mepsurvey.eu/data-objects/data/
 # MEP Survey data
 
 ```{r}
-source("/Users/gabgilling/Documents/GitHub/Thesis/prepare_mep.R")
+mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/mep_data_with_IDs.csv")
 ```
 
 # T4-0084/1995
