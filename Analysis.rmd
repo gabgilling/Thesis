@@ -117,7 +117,7 @@ protect.env<- merge(protect.env, nuts_fr %>% select(Constituency, Region.Name), 
 
 protect.env$Constituency <- ifelse(is.na(protect.env$Constituency), protect.env$Region.Name, protect.env$Constituency)
 
-fit.protect.env <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1|gender_male)  + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct, data = protect.env, family = binomial(link = "logit"))
+fit.protect.env <- stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat)  + (1|edu) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = protect.env, family = binomial(link = "logit"))
 
 print(fit.protect.env, digits = 3)
 ```
@@ -200,6 +200,20 @@ mep.ids$Parliament <- with(mep.ids, ifelse(date_begin >= "2004-07-20" & date_end
                                     ifelse(date_begin > "2009-06-07" & date_end <= "2014-07-14", 7,
                                     ifelse(date_begin >= "2014-07-15" & date_end <= "2020-01-01", 8, Parliament))))
 
+mep.ids$ideo6 <- ""
+mep.ids$ideo6 <- with(mep.ids, ifelse(Group %in% c("Party of European Socialists ", "Party of European Socialists"), "Left", ideo6))
+
+mep.ids$ideo6 <- with(mep.ids, ifelse(Group %in% c("The Greens–European Free Alliance", "European Green Party"), "Greens", ideo6))
+
+mep.ids$ideo6 <- with(mep.ids, ifelse(Group %in% c("European United Left–Nordic Green Left", "Parti de la gauche européenne"), "Far-Left", ideo6))
+
+mep.ids$ideo6 <- with(mep.ids, ifelse(Group %in% c("Europe of Freedom and Democracy", "Independence/Democracy","Europe of Nations and Freedom", "Identity, Tradition, Sovereignty", "Europe of Freedom and Direct Democracy","EFD", "Alliance of European National Movements"), "Far-Right", ideo6))
+
+mep.ids$ideo6 <- with(mep.ids, ifelse(Group %in% c("European Free Alliance", "  NI" ,"Non-Inscrits" ), "Other", ideo6))
+
+mep.ids$ideo6 <- with(mep.ids, ifelse(Group %in% c("Alliance of Conservatives and Reformists in Europe", "European People's Party" ), "Right", ideo6))
+
+unique(mep.ids[mep.ids$ideo6 == "",]$Group)
 # mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Est", "East France" , constituency))
 # mep.ids$constituency <- with(mep.ids, ifelse(constituency == "Sud-Ouest", "South-West France" , constituency))
 # mep.ids$constituency <- with(mep.ids, ifelse(constituency %in% c("Ouest", "West"), "West France" , constituency))
