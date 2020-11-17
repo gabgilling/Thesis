@@ -1,4 +1,4 @@
-"","Region.Name","NUTS2_old","gdp_cap","density","area","higher_ed","hhd_income","unemp_pct","NUTS","NUTS_eb","Constituency","age_cat","gender_male","edu","freq","country"
+"","Region.Name","NUTS2_old","gdp_cap","density","area","higher_ed","hhd_income","unemp_pct","NUTS","NUTS_eb","Constituency","age_cat1","gender_male","edu","freq","country"
 "1","Alsace","FR42",-0.105865549236101,-0.122699662926722,-0.241278215087647,0.81515191268947,-0.688225950519789,-0.00790980655990197,"FRF1","FR10","East France","Y18-24",0,6,0,"FR"
 "2","Alsace","FR42",-0.105865549236101,-0.122699662926722,-0.241278215087647,0.81515191268947,-0.688225950519789,-0.00790980655990197,"FRF1","FR10","East France","Y_GE85",1,4,0,"FR"
 "3","Alsace","FR42",-0.105865549236101,-0.122699662926722,-0.241278215087647,0.81515191268947,-0.688225950519789,-0.00790980655990197,"FRF1","FR10","East France","Y_GE85",1,5,1287,"FR"

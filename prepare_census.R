@@ -55,10 +55,10 @@ census2011_ms$FLAGS <- NULL
 census2011_ms$FOOTNOTES <- NULL
 
 
-census2011_education$age_cat <- ifelse(census2011_education$AGE %in% c('Y18', 'Y19', 'Y20-24'), 'Y18-24', 
+census2011_education$age_cat1 <- ifelse(census2011_education$AGE %in% c('Y18', 'Y19', 'Y20-24'), 'Y18-24', 
                                        census2011_education$AGE)
 
-census2011_ms$age_cat <- census2011_ms$AGE
+census2011_ms$age_cat2 <- census2011_ms$AGE
 
 census2011_education$gender_male <- ifelse(census2011_education$SEX == 'M', 1,0 )
 census2011_ms$gender_male <- ifelse(census2011_ms$SEX == 'M', 1,0 )
@@ -174,5 +174,5 @@ census2011_ms$Constituency <- with(census2011_ms,
 census2011_ms$Constituency <- with(census2011_ms, 
                                           ifelse(Constituency == "West Midlands (UK)"  , "West Midlands", Constituency))
 
-# write.csv(census2011_education, "/Users/gabgilling/Documents/GitHub/Thesis/Data/census_edu_predictors.csv")
-# write.csv(census2011_ms, "/Users/gabgilling/Documents/GitHub/Thesis/Data/census_ms_predictors.csv")
+#write.csv(census2011_education, "/Users/gabgilling/Documents/GitHub/Thesis/Data/census_edu_predictors.csv")
+#write.csv(census2011_ms, "/Users/gabgilling/Documents/GitHub/Thesis/Data/census_ms_predictors.csv")
