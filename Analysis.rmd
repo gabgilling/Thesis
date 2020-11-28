@@ -39,70 +39,6 @@ library(robustHD)
 library(ggplot2)
 library(forcats)
 
-eb81.3 <- read_dta("/Users/gabgilling/Downloads/ZA5914_v3-0-0.dta")
-
-eb81.3$gender_male <- ifelse(eb81.3$d10 == 2, 1, 0)
-
-# for education census
-# eb81.3$age_cat1 <- with(eb81.3, ifelse(d11 >= 18 & d11 < 25, "Y18-24",
-#                                ifelse(d11 >= 25 & d11 < 30, "Y25-29",
-#                                ifelse( d11 >= 30 & d11 < 50, "Y30-49",
-#                                       ifelse(d11 >= 50 & d11 < 65, "Y50-64",
-#                                       ifelse(d11 >= 65 & d11 < 85, "Y65-84",
-#                                       ifelse(d11 >= 85, "Y_GE85",
-#                                       NA)))))))
-
-# for marital status census
-eb81.3$age_cat2 <- with(eb81.3, ifelse(d11 >= 15 & d11 < 30, "Y15-29",
-                               ifelse(d11 >= 30 & d11 < 50, "Y30-49",
-                               ifelse( d11 >= 50 & d11 < 65, "Y50-64",
-                                      ifelse(d11 >= 65 & d11 < 85, "Y65-84",
-                                      ifelse(d11 >= 85, "Y_GE85",
-                                      NA))))))
-
-eb81.3$ms <- with(eb81.3, ifelse(d7 %in% c(1,2,3,4), "MAR",
-                          ifelse(d7 %in% c(5,6,7,8), "REP",
-                          ifelse(d7 %in% c(9,10), "SIN",
-                          ifelse(d7 %in% c(11,12), "DIV",
-                          ifelse(d7 %in% c(13,14), "WID",
-                          NA))))))
-                                      
-                                      
-eb81.3$edu <- eb81.3$qb1
-
-eb81.3$NUTS_eb <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
-                      ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
-                      ifelse(isocntry == "IT", paste("IT", eb81.3$p7it_r1, sep = ""), NA))))
-
-
-eb81.3 <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
-
-eb75.2 <- read_dta("/Users/gabgilling/Downloads/ZA5480_v4-0-1.dta")
-
-eb75.2 <- eb75.2 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
-
-eb75.2$NUTS_eb <- with(eb75.2, ifelse(v7 == "FR", paste("FR", eb75.2$v660, sep = ""), 
-                      ifelse(v7 %in% c("GB-GBN"), paste("UK", eb75.2$v673, sep = ""),
-                      ifelse(v7 == "IT", paste("IT", eb75.2$v668, sep = ""), NA))))
-
-unique(eb75.2$NUTS_eb)
-
-
-eb75.2$gender_male <- ifelse(eb75.2$v601 == 2, 1, 0)
-
-eb75.2$age_cat2 <- with(eb75.2, ifelse(v602 >= 15 & v602 < 30, "Y15-29",
-                               ifelse(v602>= 30 & v602 < 50, "Y30-49",
-                               ifelse(v602 >= 50 & v602 < 65, "Y50-64",
-                                      ifelse(v602 >= 65 & v602 < 85, "Y65-84",
-                                      ifelse(v602 >= 85, "Y_GE85",
-                                      NA))))))
-
-eb75.2$ms <- with(eb75.2, ifelse(v596 %in% c(1,2,3,4), "MAR",
-                          ifelse(v596 %in% c(5,6,7,8), "REP",
-                          ifelse(v596 %in% c(9,10), "SIN",
-                          ifelse(v596 %in% c(11,12), "DIV",
-                          ifelse(v596 %in% c(13,14), "WID",
-                          NA))))))
 
 #v668 IT NUTS 1, v660 FR NUTS 2, v673 NUTS1 UK
 #v601 gender v602 age v596 ms
@@ -114,7 +50,7 @@ Step 2: Census
 ```{r}
 # census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_edu_predictors.csv", header = T)
 
-source("/Users/gabgilling/Documents/GitHub/Thesis/prepare_census.R")
+source("https://raw.githubusercontent.com/gabgilling/Thesis/master/prepare_census.R")
 census2011_ms <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_ms_predictors.csv", header = T)
 ```
 
@@ -138,22 +74,11 @@ try to minimize amounts of regional predictors, maybe 2-3
 library(rstanarm)
 set.seed(1010)
 
-eb81.3$eu.leg <- ifelse(eb81.3$qa18_1 %in% c(1,2), 1, ifelse(eb81.3$qa18_1 %in% c(3,4), 0, NA))
-eb81.3$eu.enf <- ifelse(eb81.3$qa18_2 %in% c(1,2), 1, ifelse(eb81.3$qa18_2 %in% c(3,4), 0, NA))
-eb81.3$eu.asst <- ifelse(eb81.3$qa18_3 %in% c(1,2), 1, ifelse(eb81.3$qa18_3 %in% c(3,4), 0, NA))
-eb81.3$eu.fund <- ifelse(eb81.3$qa18_4 %in% c(1,2), 1, ifelse(eb81.3$qa18_4 %in% c(3,4), 0, NA))
-eb81.3$cooperation <- ifelse(eb81.3$qa15 == 2, 1, ifelse(eb81.3$qa15 == 1, 0, NA))
-eb81.3$envorecon <- ifelse(eb81.3$qa14 == 1, 1, ifelse(eb81.3$qa15 == 2, 0, NA))
-eb81.3$protect.env <- ifelse(eb81.3$qa1 %in% c(1,2), 1, ifelse(eb81.3$qa1 %in% c(3,4), 0, NA))
+
 
 eb75.2 %>% group_by(NUTS_eb) %>% summarise(mean(eu.leg, na.rm = T))
 
-eb75.2$protect.env <- ifelse(eb75.2$v183 %in% c(1,2), 1, ifelse(eb75.2$v183 %in% c(3,4), 0, NA))
-eb75.2$envorecon <- ifelse(eb75.2$v337 == 1 & eb75.2$v338 == 2, 1, ifelse(eb75.2$v337 == 3 | eb75.2$v338 == 3, 0, NA))
-eb75.2$cooperation <- ifelse(eb75.2$v339 == 2, 1, ifelse(eb75.2$v339== 1, 0, NA))
-eb75.2$eu.leg <- ifelse(eb75.2$v354 %in% c(1,2), 1, ifelse(eb75.2$v354 %in% c(3,4), 0, NA))
-eb75.2$eu.asst <- ifelse(eb75.2$v355 %in% c(1,2), 1, ifelse(eb75.2$v355 %in% c(3,4), 0, NA))
-eb75.2$eu.fund <- ifelse(eb75.2$v356 %in% c(1,2), 1, ifelse(eb75.2$v356 %in% c(3,4), 0, NA))
+
 
 rbind(eb75.2 %>% select(protect.env, age_cat2, gender_male, ms, NUTS_eb), eb81.3 %>% select(protect.env, age_cat2, gender_male, ms, NUTS_eb)) %>% group_by(age_cat2, gender_male, ms, NUTS_eb) %>%
   summarise(pro = sum(get(var_name) == 1), against = n() - pro) %>% na.omit()
@@ -164,39 +89,111 @@ rbind(eb75.2 %>% select(protect.env, age_cat2, gender_male, ms, NUTS_eb), eb81.3
 
 
 fit_var_logit <- function(survey_df = c(), var_name){
-  
+  # print(length(survey_df))
   if (length(survey_df) >= 2){
+    
     temp <- get(survey_df[1]) %>% select(var_name, age_cat2, gender_male, ms, NUTS_eb)
     for (i in 2:length(survey_df)){
       temp <- rbind(temp, get(survey_df[i]) %>% select(var_name, age_cat2, gender_male, ms, NUTS_eb))
     }
   } else {
-    survey_df = get(survey_df)
+    temp = get(survey_df)
   }
   
-  temp <- temp %>% group_by(age_cat2, gender_male, ms, NUTS_eb) %>%
-  summarise(pro = sum(get(var_name) == 1), against = n() - pro) %>% na.omit()
-  
+
   temp <- merge(temp, reg_preds_std, by = "NUTS_eb")
+    
   temp$country <- substr(temp$NUTS, 1, 2)
   temp <- merge(temp, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
   temp$Constituency <- ifelse(is.na(temp$Constituency), temp$Region.Name, temp$Constituency)
   
+  temp <- temp %>% group_by(age_cat2, gender_male, ms, Constituency, country, gdp_cap, 
+                            higher_ed,hhd_income, unemp_pct) %>%
+  summarise(pro = sum(get(var_name) == 1), against = n() - pro) %>% na.omit()
   
-  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|NUTS_eb) + (1 | age_cat2)  + (1|ms) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0))
+  set.seed(1010)
+
+  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
+                    chains = 4, cores=  4, adapt_delta= 0.99))
 
 }
 
-set.seed(1010)
 
-fit.protect.env <- fit_var_logit(survey_df = c("eb81.3", "eb75.2"), var_name = "protect.env")
-fit.eu.enf <- fit_var_logit(survey_df = "eb81.3", var_name = "eu.enf")
-fit.eu.leg <- fit_var_logit(survey_df = c("eb81.3", "eb75.2"), var_name = "eu.leg")
-fit.eu.asst <- fit_var_logit(survey_df = c("eb81.3", "eb75.2"), var_name = "eu.asst")
-fit.eu.fund <- fit_var_logit(survey_df = c("eb81.3", "eb75.2"), var_name = "eu.fund")
-fit.cooperation <- fit_var_logit(survey_df = c("eb81.3", "eb75.2"), var_name = "cooperation")
-fit.envorecon <- fit_var_logit(survey_df = c("eb81.3", "eb75.2"), var_name = "envorecon")
+colnames(eb81.3)
+fit.env.important.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "env.important")
+fit.eu.enf.env.813 <- fit_var_logit(survey_df = "eb81.3", var_name = "eu.enf")
+fit.eu.leg.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "eu.leg")
+fit.eu.asst.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "eu.asst")
+fit.eu.fund.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "eu.fund")
+fit.cooperation.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "cooperation")
+fit.envorecon.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "envorecon")
 
+colnames(eb75.2)
+fit.env.important.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "env.important")
+fit.eu.leg.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "eu.leg")
+fit.eu.asst.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "eu.asst")
+fit.eu.fund.752<- fit_var_logit(survey_df = c("eb75.2"), var_name = "eu.fund")
+fit.cooperation.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "cooperation")
+fit.envorecon.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "envorecon")
+
+colnames(eb62.1)
+fit.envimportant1.621 <- fit_var_logit(survey_df = c("eb62.1"), var_name = "envimportant1")
+fit.envimportant2.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "envimportant2")
+fit.stricterreg.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "stricterreg")
+fit.enfreg.621 <- fit_var_logit(survey_df = c("eb62.1"), var_name = "enfreg")
+fit.highertax.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "highertax")
+fit.supNGOs.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "supNGOs")
+fit.financialincentives.621 <- fit_var_logit(survey_df = c("eb62.1"), var_name = "financialincentives")
+
+colnames(eb68.2)
+
+fit.682 <- list()
+
+generate_estimates <- function(survey_df){
+  excl <- c("gender_male", "age_cat2","isocntry" , "ms" ,"NUTS_eb", "year","parliament")
+  my_list <- list()
+  i <- 1
+  for (col in colnames(get(survey_df))[!colnames(get(survey_df)) %in% excl]){
+    print(col)
+    my_list[[i]] <- fit_var_logit(survey_df = survey_df, var_name = col)
+    i <- i + 1
+  }
+  return(my_list)
+}
+
+fit.692 <- generate_estimates("eb69.2")
+fit.813 <- generate_estimates("eb81.3")
+fit.752 <- generate_estimates("eb75.2")
+fit.621 <- generate_estimates("eb62.1")
+fit.682 <- generate_estimates("eb68.2")
+fit.711 <- generate_estimates("eb71.1")
+fit.721 <- generate_estimates("eb72.1")
+fit.752 <- generate_estimates("eb75.2")
+
+fit.802 <- generate_estimates("eb80.2")
+fit.834 <- generate_estimates("eb83.4")
+
+fit.871 <- generate_estimates("eb87.1")
+fit.881 <- generate_estimates("eb88.1")
+
+
+
+
+l <- readRDS("fit.692.rds")
+
+set.seed(1011)
+fit.692[[8]] <- fit_var_logit(survey_df = c("eb69.2"), var_name = "ghgtarget")
+
+# fit.env.important.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "env.important")
+# fit.envoverecon1.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "envoverecon1")
+# fit.envoverecon2.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "envoverecon2")
+# fit.cooperation.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "envoverecon1")
+# fit.stricterreg.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "stricterreg")
+# fit.enfreg.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "enfreg")
+# fit.highertax.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "highertax")
+# fit.eu.fund.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "eu.fund")
+# fit.heavierfines.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "heavierfines")
+# fit.financialincentives.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "financialincentives")
 
 # protect.env <- eb81.3_filt %>% group_by(age_cat2, gender_male, ms, NUTS_eb) %>%
 #   summarise(pro = sum(protect.env == 1), against = n() - pro) %>% na.omit()
