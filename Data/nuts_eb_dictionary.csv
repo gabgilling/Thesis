@@ -1,0 +1,44 @@
+﻿Constituency,Region Name,NUTS2_old,NUTS2,NUTS1,NUTS_eb_old,NUTS_eb_new
+Ile de France,Île de France,FR1,FR1,FR1,FR1,FR1
+Massif-central–Centre,Centre - Val de Loire,FR24,FRB,FRB,FR5,FR5
+East France,Bourgogne,FR26,FRC1,FRC,FR7,FR7
+East France,Franche-Comté,FR43,FRC2,FRC,FR11,FR11
+North-West France,Basse-Normandie,FR25,FRD1,FRD,FR6,FR6
+North-West France,Haute-Normandie,FR23,FRD2,FRD,FR4,FR4
+North-West France,Nord-Pas-de-Calais,FR30,FRE1,FRE,FR8,FR8
+North-West France,Picardie,FR22,FRE2,FRE,FR3,FR3
+East France,Alsace,FR42,FRF1,FRF,FR10,FR10
+East France,Champagne-Ardenne,FR21,FRF2,FRF,FR2,FR2
+East France,Lorraine,FR41,FRF3,FRF,FR9,FR9
+West France,Pays-de-la-Loire,FR51,FRG,FRG,FR12,FR12
+West France,Bretagne,FR52,FRH,FRH,FR13,FR13
+South-West France,Aquitaine,FR61,FRI1,FRI,FR15,FR15
+Massif-central–Centre,Limousin,FR63,FRI2,FRI,FR17,FR17
+West France,Poitou-Charentes,FR53,FRI3,FRI,FR14,FR14
+South-West France,Languedoc-Roussillon,FR81,FRJ1,FRJ,FR20,FR20
+South-West France,Midi-Pyrénées,FR62,FRJ2,FRJ,FR16,FR16
+Massif-central–Centre,Auvergne,FR72,FRK1,FRK,FR19,FR19
+South-East France,Rhône-Alpes,FR71,FRK2,FRK,FR18,FR18
+South-East France,Provence-Alpes-Côte d'Azur,FR82,FRL0,FRL,FR21,FR21
+South-East France,Corse,FR83 ,FRM0,FRM,FR22,FR22
+North-West Italy,Nord-Ovest,,,ITC,IT1,IT1
+North-East Italy,Nord-Est,,,ITH,IT2,IT2
+Central Italy,Centro (IT),,,ITI,IT3,IT3
+South Italy,Sud,,,ITF,IT4,IT4
+Islands Italy,Isole,,,ITG,IT5,IT5
+North East England,North East (UK),,,UKC,UK6,UK1
+North West England,North West (UK),,,UKD,UK7,UK2
+Yorkshire and the Humber,Yorkshire and The Humber,,,UKE,UK8,UK3
+East Midlands,East Midlands (UK),,,UKF,UK9,UK4
+West Midlands,West Midlands (UK),,,UKG,UK10,UK5
+East England,East of England,,,UKH,UK11,UK6
+London,London,,,UKI,UK12,UK7
+South-East England,South East (UK),,,UKJ,UK13,UK8
+South-West England,South West (UK),,,UKK,UK14,UK9
+Wales,Wales,,,UKL,UK15,UK10
+Scotland,Scotland,,,UKM,UK16,UK11
+Northern Ireland,Belfast,,,UKN,UK1,UK12
+Northern Ireland,Outer Belfast,,,UKN,UK2,UK12
+Northern Ireland,East of Northern Ireland,,,UKN,UK3,UK12
+Northern Ireland,North of Northern Ireland,,,UKN,UK4,UK12
+Northern Ireland,West and South of Northern Ireland,,,UKN,UK5,UK12

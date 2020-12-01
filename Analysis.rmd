@@ -31,14 +31,14 @@ Skills and qualifications: QB1 to QB23
 qb1: EDUCATION
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 options(dplyr.summarise.inform=F) 
 library(haven)
 library(dplyr)
 library(robustHD)
 library(ggplot2)
 library(forcats)
-
+library(rstanarm)
 
 #v668 IT NUTS 1, v660 FR NUTS 2, v673 NUTS1 UK
 #v601 gender v602 age v596 ms
@@ -52,6 +52,22 @@ Step 2: Census
 
 source("https://raw.githubusercontent.com/gabgilling/Thesis/master/prepare_census.R")
 census2011_ms <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_ms_predictors.csv", header = T)
+
+reg_preds <- merge(reg_preds,census2011_ms %>% select(Constituency, Region.Name, country), by = "Region.Name", all.x = TRUE)
+# reg_preds$Constituency <-ifelse(is.na(reg_preds$Constituency), reg_preds$Region.Name, reg_preds$Constituency)
+
+reg_preds_constituencies <-  reg_preds %>% group_by(Constituency) %>% 
+                                summarise(gdp_cap2 = weighted.mean(gdp_cap, pop),
+                                hhd_income2= weighted.mean(hhd_income, pop),
+                                unemp_pct2 = weighted.mean(unemp_pct , pop),
+                                higher_ed2 = weighted.mean(higher_ed, pop))
+
+
+reg_preds_constituencies[c("gdp_cap2", "hhd_income2", "unemp_pct2", "higher_ed2")] <- reg_preds_constituencies[c("gdp_cap2", "hhd_income2", "unemp_pct2", "higher_ed2")] %>% robustHD::standardize()
+
+census2011_ms <-merge(census2011_ms, reg_preds_constituencies, by = "Constituency", all.x = T)
+
+
 ```
 
 
@@ -71,7 +87,7 @@ https://www.kaggle.com/ruslankl/european-union-lgbt-survey-2012?select=LGBT_Surv
 try to minimize amounts of regional predictors, maybe 2-3
 
 ```{r estimate_preferences}
-library(rstanarm)
+
 set.seed(1010)
 
 
@@ -86,9 +102,9 @@ rbind(eb75.2 %>% select(protect.env, age_cat2, gender_male, ms, NUTS_eb), eb81.3
 
 
 ```{r}
+source("/Users/gabgilling/Documents/Documents - Gabriel’s MacBook Pro/GitHub/Thesis/wrange_eb.R")
 
-
-fit_var_logit <- function(survey_df = c(), var_name){
+fit_var_logit <- function(survey_df = c(), var_name, regional_predictors){
   # print(length(survey_df))
   if (length(survey_df) >= 2){
     
@@ -101,61 +117,32 @@ fit_var_logit <- function(survey_df = c(), var_name){
   }
   
 
-  temp <- merge(temp, reg_preds_std, by = "NUTS_eb")
-    
-  temp$country <- substr(temp$NUTS, 1, 2)
-  temp <- merge(temp, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
-  temp$Constituency <- ifelse(is.na(temp$Constituency), temp$Region.Name, temp$Constituency)
-  
-  temp <- temp %>% group_by(age_cat2, gender_male, ms, Constituency, country, gdp_cap, 
-                            higher_ed,hhd_income, unemp_pct) %>%
-  summarise(pro = sum(get(var_name) == 1), against = n() - pro) %>% na.omit()
+  temp <- merge(temp, regional_predictors, by = "Constituency", all.x = T)
+
+  temp <- temp %>% group_by(age_cat2, gender_male, ms, Constituency, country, gdp_cap2, 
+                            higher_ed2,hhd_income2, unemp_pct2) %>%
+                            summarise(pro = sum(get(var_name) == 1), against = n() - pro) %>% 
+                            na.omit()
   
   set.seed(1010)
 
-  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + gdp_cap + higher_ed + hhd_income + unemp_pct + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
+  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + gdp_cap2  + unemp_pct2 + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
                     chains = 4, cores=  4, adapt_delta= 0.99))
 
 }
 
 
-colnames(eb81.3)
-fit.env.important.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "env.important")
-fit.eu.enf.env.813 <- fit_var_logit(survey_df = "eb81.3", var_name = "eu.enf")
-fit.eu.leg.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "eu.leg")
-fit.eu.asst.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "eu.asst")
-fit.eu.fund.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "eu.fund")
-fit.cooperation.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "cooperation")
-fit.envorecon.env.813 <- fit_var_logit(survey_df = c("eb81.3"), var_name = "envorecon")
-
-colnames(eb75.2)
-fit.env.important.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "env.important")
-fit.eu.leg.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "eu.leg")
-fit.eu.asst.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "eu.asst")
-fit.eu.fund.752<- fit_var_logit(survey_df = c("eb75.2"), var_name = "eu.fund")
-fit.cooperation.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "cooperation")
-fit.envorecon.752 <- fit_var_logit(survey_df = c("eb75.2"), var_name = "envorecon")
-
-colnames(eb62.1)
-fit.envimportant1.621 <- fit_var_logit(survey_df = c("eb62.1"), var_name = "envimportant1")
-fit.envimportant2.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "envimportant2")
-fit.stricterreg.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "stricterreg")
-fit.enfreg.621 <- fit_var_logit(survey_df = c("eb62.1"), var_name = "enfreg")
-fit.highertax.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "highertax")
-fit.supNGOs.621  <- fit_var_logit(survey_df = c("eb62.1"), var_name = "supNGOs")
-fit.financialincentives.621 <- fit_var_logit(survey_df = c("eb62.1"), var_name = "financialincentives")
-
-colnames(eb68.2)
-
-fit.682 <- list()
 
 generate_estimates <- function(survey_df){
-  excl <- c("gender_male", "age_cat2","isocntry" , "ms" ,"NUTS_eb", "year","parliament")
+  excl <- c("gender_male", "age_cat2", "ms" , "year","parliament", "country",
+            "Region.Name", "Constituency", "NUTS_eb_old", "NUTS_eb_new")
+  
   my_list <- list()
   i <- 1
   for (col in colnames(get(survey_df))[!colnames(get(survey_df)) %in% excl]){
     print(col)
-    my_list[[i]] <- fit_var_logit(survey_df = survey_df, var_name = col)
+    my_list[[i]] <- fit_var_logit(survey_df = survey_df, var_name = col, 
+                                  regional_predictors = reg_preds_constituencies)
     i <- i + 1
   }
   return(my_list)
@@ -165,6 +152,10 @@ fit.692 <- generate_estimates("eb69.2")
 fit.813 <- generate_estimates("eb81.3")
 fit.752 <- generate_estimates("eb75.2")
 fit.621 <- generate_estimates("eb62.1")
+
+fit.621_noed <- generate_estimates("eb62.1")
+fit.621_noed_nohhd <- generate_estimates("eb62.1")
+
 fit.682 <- generate_estimates("eb68.2")
 fit.711 <- generate_estimates("eb71.1")
 fit.721 <- generate_estimates("eb72.1")
@@ -174,57 +165,38 @@ fit.802 <- generate_estimates("eb80.2")
 fit.834 <- generate_estimates("eb83.4")
 
 fit.871 <- generate_estimates("eb87.1")
+
 fit.881 <- generate_estimates("eb88.1")
+fit.902 <- generate_estimates("eb90.2")
 
-
-
-
-l <- readRDS("fit.692.rds")
 
 set.seed(1011)
 fit.692[[8]] <- fit_var_logit(survey_df = c("eb69.2"), var_name = "ghgtarget")
 
-# fit.env.important.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "env.important")
-# fit.envoverecon1.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "envoverecon1")
-# fit.envoverecon2.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "envoverecon2")
-# fit.cooperation.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "envoverecon1")
-# fit.stricterreg.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "stricterreg")
-# fit.enfreg.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "enfreg")
-# fit.highertax.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "highertax")
-# fit.eu.fund.682  <- fit_var_logit(survey_df = c("eb68.2"), var_name = "eu.fund")
-# fit.heavierfines.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "heavierfines")
-# fit.financialincentives.682 <- fit_var_logit(survey_df = c("eb68.2"), var_name = "financialincentives")
-
-# protect.env <- eb81.3_filt %>% group_by(age_cat2, gender_male, ms, NUTS_eb) %>%
-#   summarise(pro = sum(protect.env == 1), against = n() - pro) %>% na.omit()
-# 
-# protect.env <- merge(protect.env, reg_preds_std, by = "NUTS_eb")
-# protect.env$country <- substr(protect.env$NUTS, 1, 2)
-# protect.env<- merge(protect.env, nuts_fr %>% select(Constituency, Region.Name), by = "Region.Name", all.x = TRUE)
-# protect.env$Constituency <- ifelse(is.na(protect.env$Constituency), protect.env$Region.Name, protect.env$Constituency)
-
+set.seed(1011)
+fit_var_logit(survey_df = c("eb88.1"), var_name = "env.important", reg_preds_constituencies)
 
 print(fit.protect.env, digits = 3)
 ```
 
 ```{r poststratify}
+census2011_ms$isocntry <- census2011_ms$country
 
 generate_region_estimates <- function(poststrat, fitted_model){
   
   ## generate state_df
-  N <- length(unique(poststrat$Region.Name))
+  N <- length(unique(poststrat$Constituency))
   
   region_preferences <- data.frame(
-                          Region.Name = unique(poststrat$Region.Name),
-                          constituency = rep("", N),
+                          Constituency = unique(poststrat$Constituency),
                           country = rep("", N),
                           pref = rep(-1, N),
                           se = rep(-1, N)
 )
 
-  for (i in unique(poststrat$Region.Name)) {
+  for (i in unique(poststrat$Constituency)) {
     # print(i)
-    poststrat_region <- poststrat[poststrat$Region.Name == i, ]
+    poststrat_region <- poststrat[poststrat$Constituency == i, ] %>% na.omit()
     
     posterior_prob_region <- posterior_epred(
       fitted_model,
@@ -236,33 +208,65 @@ generate_region_estimates <- function(poststrat, fitted_model){
     poststrat_prob_region <- posterior_prob_region %*% poststrat_region$freq / sum(poststrat_region$freq)
 
     #This is the estimate for popn in state:
-    region_preferences[region_preferences$Region.Name == i,]$pref <- round(mean(poststrat_prob_region), 4)
-    region_preferences[region_preferences$Region.Name == i,]$se <- round(sd(poststrat_prob_region), 4)
-    region_preferences[region_preferences$Region.Name == i,]$country <- unique(poststrat_region$country)
-    region_preferences[region_preferences$Region.Name == i,]$constituency <- unique(poststrat_region$Constituency)
+    region_preferences[region_preferences$Constituency == i,]$pref <- round(mean(poststrat_prob_region), 4)
+    region_preferences[region_preferences$Constituency == i,]$se <- round(sd(poststrat_prob_region), 4)
+    region_preferences[region_preferences$Constituency == i,]$country <- unique(poststrat_region$isocntry)
   }
   
-  return(region_preferences %>% group_by(constituency, country) %>% summarise(pref = mean(pref), se = mean(se)))
+  # return(region_preferences %>% group_by(Constituency, country) %>% summarise(pref = mean(pref), se = mean(se)))
+  return(region_preferences)
 }
 
+poststrat_survey <- function(model_list){
+  survey_prefs <- list()
+  agg_results <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), model_list[[1]])
+  survey_prefs[[1]] <- agg_results
+  for (i in 2:length(model_list)){
+    print(i)
+    res <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), model_list[[i]])
+    survey_prefs[[i]] <- res
+    agg_results <- rbind(agg_results, res)
+  }
+  
+  agg_prefs <- as.data.frame(agg_results %>% group_by(Constituency, country) %>%summarise(mean_pref = mean(pref), mean_se = mean(se)))
+  
+  
+  
+  return(list(agg_prefs, survey_prefs))
+}
 
-protect.env_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.protect.env)
-envorecon_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.envorecon)
-cooperation_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.cooperation)
-eu.asst_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.eu.asst)
-eu.enf_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.eu.enf)
-eu.fund_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.eu.fund)
-eu.leg_prefs <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), fit.eu.leg)
+# skip 6th model too high diverg trans
+prefs.621 <- poststrat_survey(fit.621[-6])
+prefs.621_noed <- poststrat_survey(fit.621_noed)
+prefs.621_noed_nohhd <- poststrat_survey(fit.621_noed_nohhd)
+prefs.692 <- poststrat_survey(fit.692)
+prefs.813 <- poststrat_survey(fit.813)
+prefs.752 <- poststrat_survey(fit.752)
+prefs.682 <- poststrat_survey(fit.682)
 
-agg_prefs <- rbind(protect.env_prefs,envorecon_prefs,cooperation_prefs,eu.asst_prefs,eu.enf_prefs,eu.fund_prefs,eu.leg_prefs) %>% group_by(constituency, country) %>%summarise(mean_pref = mean(pref), mean_se = mean(se))
+prefs.711 <- poststrat_survey(fit.711)
+prefs.721 <- poststrat_survey(fit.721)
+prefs.752 <- poststrat_survey(fit.752)
+prefs.802 <- poststrat_survey(fit.802)
+prefs.834 <- poststrat_survey(fit.834)
+prefs.871 <- poststrat_survey(fit.871)
+# skip first model too high diverg trans
+prefs.881 <- poststrat_survey(fit.881[-1])
+prefs.902 <- poststrat_survey(fit.902)
+
+total.prefs <- rbind(prefs.621[[1]],prefs.692[[1]], prefs.813[[1]], prefs.752[[1]], prefs.682[[1]], prefs.711[[1]],
+                     prefs.721[[1]],prefs.752[[1]], prefs.802[[1]], prefs.834[[1]], prefs.871[[1]], prefs.881[[1]]) %>% 
+                group_by(Constituency, country) %>% 
+                summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se))
 
 
-env_prefs_plot <- ggplot(agg_prefs,
-                         aes(x= reorder(constituency, mean_pref), y = mean_pref, color = country)) + 
+
+env_prefs_plot <- ggplot(prefs.621[[2]][[4]],
+                         aes(x= reorder(Constituency, pref), y = pref, color = country)) + 
   geom_point() + 
-  geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) + 
+  # geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) + 
   theme_classic() +
-  # ylim(0.6, 1) + 
+  ylim(0.2, 1.1) +
   ggtitle("") +
   theme(axis.text.x = element_text(angle = 90)) +
   labs(x = "Constituency", y = "Mean Preference")
@@ -274,17 +278,28 @@ env_prefs_plot
 ```
 
 ```{r}
-ggplot(protect.envs_prefs.r,
-  aes(x= reorder(constituency, pref), y = pref, color = country)) + 
-  geom_point() + 
-  geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
-  theme_classic() +
-  # ylim(0.6, 1) + 
-  ggtitle("") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  labs(x = "Constituency", y = "Mean Preference")
+colnames(eb62.1)
+excl <- c("gender_male", "age_cat2", "ms" , "year","parliament", "country",
+            "Region.Name", "Constituency", "NUTS_eb_old", "NUTS_eb_new", "Constituency")
+
+t <- na.omit(eb62.1) %>% group_by(Constituency, country) %>% 
+                summarise_at(colnames(eb62.1[!colnames(eb62.1) %in% excl]), mean)
+t <- t[-8]
+
+t
+
+ggplot(cbind(t[c(1:2)], mean_prefs = t[-c(1:2)] %>% rowMeans()), aes( x= Constituency, y = mean_prefs)) + 
+  geom_point() +   theme(axis.text.x = element_text(angle = 90)) +
+  labs(x = "Constituency", y = "Mean Preference") 
 
 ```
+```{r}
+ggplot(prefs.621[[1]], aes(x = Constituency, y= mean_pref)) + geom_point() +   theme(axis.text.x = element_text(angle = 90)) +
+  labs(x = "Constituency", y = "Mean Preference") 
+
+```
+
+
 
 ```{r}
 ggplot(protect.envs_prefs.r2,
@@ -324,7 +339,6 @@ need to adjust for fact that some MEPs were not in parliament at that time
 library(rjson)
 MEP.data <- fromJSON(file = "/Users/gabgilling/Dropbox/QMSS/Fall 2020/Thesis/Data/ep_votes.json")
 
-grepl("A6", MEP.data[[5]]$title)
 
 cond <- sapply(MEP.data, function(x) grepl("A8-0287/2016", x$title))
 

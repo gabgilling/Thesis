@@ -1,23 +1,23 @@
-﻿Constituency,Region Name,NUTS2_old,NUTS2,NUTS1
-Ile de France,Île de France,FR1,FR1,FR1
-Massif-central–Centre,Centre - Val de Loire,FR24,FRB,FRB
-East France,Bourgogne,FR26,FRC1,FRC
-East France,Franche-Comté,FR43,FRC2,FRC
-North-West France,Basse-Normandie,FR25,FRD1,FRD
-North-West France,Haute-Normandie,FR23,FRD2,FRD
-North-West France,Nord-Pas-de-Calais,FR30,FRE1,FRE
-North-West France,Picardie,FR22,FRE2,FRE
-East France,Alsace,FR42,FRF1,FRF
-East France,Champagne-Ardenne,FR21,FRF2,FRF
-East France,Lorraine,FR41,FRF3,FRF
-West France,Pays-de-la-Loire,FR51,FRG,FRG
-West France,Bretagne,FR52,FRH,FRH
-South-West France,Aquitaine,FR61,FRI1,FRI
-Massif-central–Centre,Limousin,FR63,FRI2,FRI
-West France,Poitou-Charentes,FR53,FRI3,FRI
-South-West France,Languedoc-Roussillon,FR81,FRJ1,FRJ
-South-West France,Midi-Pyrénées,FR62,FRJ2,FRJ
-Massif-central–Centre,Auvergne,FR72,FRK1,FRK
-South-East France,Rhône-Alpes,FR71,FRK2,FRK
-South-East France,Provence-Alpes-Côte d'Azur,FR82,FRL0,FRL
-South-East France,Corse,FR83 ,FRM0,FRM
+﻿Constituency,Region Name,NUTS2_old,NUTS2,NUTS1,NUTS_eb
+Ile de France,Île de France,FR1,FR1,FR1,FR1
+Massif-central–Centre,Centre - Val de Loire,FR24,FRB,FRB,FR5
+East France,Bourgogne,FR26,FRC1,FRC,FR7
+East France,Franche-Comté,FR43,FRC2,FRC,FR11
+North-West France,Basse-Normandie,FR25,FRD1,FRD,FR6
+North-West France,Haute-Normandie,FR23,FRD2,FRD,FR4
+North-West France,Nord-Pas-de-Calais,FR30,FRE1,FRE,FR8
+North-West France,Picardie,FR22,FRE2,FRE,FR3
+East France,Alsace,FR42,FRF1,FRF,FR10
+East France,Champagne-Ardenne,FR21,FRF2,FRF,FR2
+East France,Lorraine,FR41,FRF3,FRF,FR9
+West France,Pays-de-la-Loire,FR51,FRG,FRG,FR12
+West France,Bretagne,FR52,FRH,FRH,FR13
+South-West France,Aquitaine,FR61,FRI1,FRI,FR15
+Massif-central–Centre,Limousin,FR63,FRI2,FRI,FR17
+West France,Poitou-Charentes,FR53,FRI3,FRI,FR14
+South-West France,Languedoc-Roussillon,FR81,FRJ1,FRJ,FR20
+South-West France,Midi-Pyrénées,FR62,FRJ2,FRJ,FR16
+Massif-central–Centre,Auvergne,FR72,FRK1,FRK,FR19
+South-East France,Rhône-Alpes,FR71,FRK2,FRK,FR18
+South-East France,Provence-Alpes-Côte d'Azur,FR82,FRL0,FRL,FR21
+South-East France,Corse,FR83 ,FRM0,FRM,

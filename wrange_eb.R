@@ -4,6 +4,8 @@ library(dplyr)
 ## eb81.3
 eb81.3 <- read_dta("/Users/gabgilling/Downloads/ZA5914_v3-0-0.dta")
 
+nuts_eb_dict <- read.csv("/Users/gabgilling/Documents/Documents - Gabriel’s MacBook Pro/GitHub/Thesis/Data/nuts_eb_dictionary.csv")
+
 eb81.3$gender_male <- ifelse(eb81.3$d10 == 1, 1, 0)
 
 # for education census
@@ -18,9 +20,10 @@ eb81.3$gender_male <- ifelse(eb81.3$d10 == 1, 1, 0)
 # for marital status census
 eb81.3$age_cat2 <- with(eb81.3, ifelse(d11 >= 15 & d11 < 30, "Y15-29",
                                        ifelse(d11 >= 30 & d11 < 50, "Y30-49",
+                                              ifelse(d11 >= 50 & d11 < 65, "Y50-64",
                                                       ifelse(d11 >= 65 & d11 < 85, "Y65-84",
                                                              ifelse(d11 >= 85, "Y_GE85",
-                                                                    NA)))))
+                                                                    NA))))))
 
 eb81.3$ms <- with(eb81.3, ifelse(d7 %in% c(1,2,3,4), "MAR",
                                  ifelse(d7 %in% c(5,6,7,8), "REP",
@@ -32,12 +35,15 @@ eb81.3$ms <- with(eb81.3, ifelse(d7 %in% c(1,2,3,4), "MAR",
 
 #eb81.3$edu <- eb81.3$qb1
 
-eb81.3$NUTS_eb <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
+eb81.3$NUTS_eb_new <- with(eb81.3, ifelse(isocntry == "FR", paste("FR", eb81.3$p7fr, sep = ""), 
                                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", eb81.3$p7gb, sep = ""),
                                              ifelse(isocntry == "IT", paste("IT", eb81.3$p7it_r1, sep = ""), NA))))
 
 
 eb81.3 <- eb81.3 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
+
+eb81.3 <- merge(eb81.3, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_new"), by = "NUTS_eb_new", all.x = T)
+
 
 eb81.3$year <- 2014
 eb81.3$parliament <- 7
@@ -50,7 +56,10 @@ eb81.3$cooperation <- ifelse(eb81.3$qa15 == 2, 1, ifelse(eb81.3$qa15 == 1, 0, NA
 eb81.3$envorecon <- ifelse(eb81.3$qa14 == 1, 1, ifelse(eb81.3$qa15 == 2, 0, NA))
 eb81.3$env.important <- ifelse(eb81.3$qa1 %in% c(1,2), 1, ifelse(eb81.3$qa1 %in% c(3,4), 0, NA))
 
-eb81.3 <- eb81.3 %>% select(gender_male, age_cat2, NUTS_eb, ms, isocntry, year, parliament,
+eb81.3$country <- ifelse(eb81.3$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb81.3$isocntry)
+
+
+eb81.3 <- eb81.3 %>% select(gender_male, age_cat2, NUTS_eb_new, ms, country, year, parliament, Constituency, Region.Name,
                   eu.leg, eu.enf, eu.asst, eu.fund, cooperation, envorecon, env.important)
 
 
@@ -58,11 +67,13 @@ eb81.3 <- eb81.3 %>% select(gender_male, age_cat2, NUTS_eb, ms, isocntry, year, 
 ## eb75.2
 eb75.2 <- read_dta("/Users/gabgilling/Downloads/ZA5480_v4-0-1.dta")
 
-eb75.2 <- eb75.2 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
+eb75.2 <- eb75.2 %>% filter(v7 %in% c("GB-GBN", "GB-NIR", "FR", "IT"))
 
-eb75.2$NUTS_eb <- with(eb75.2, ifelse(v7 == "FR", paste("FR", eb75.2$v660, sep = ""), 
-                                      ifelse(v7 %in% c("GB-GBN"), paste("UK", eb75.2$v673, sep = ""),
+eb75.2$NUTS_eb_old <- with(eb75.2, ifelse(v7 == "FR", paste("FR", eb75.2$v660, sep = ""), 
+                                      ifelse(v7 %in% c("GB-GBN", "GB-NIR"), paste("UK", eb75.2$v673, sep = ""),
                                              ifelse(v7 == "IT", paste("IT", eb75.2$v668, sep = ""), NA))))
+
+eb75.2 <- merge(eb75.2, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_old"), by = "NUTS_eb_old", all.x = T)
 
 #unique(eb75.2$NUTS_eb)
 
@@ -94,7 +105,9 @@ eb75.2$eu.leg <- ifelse(eb75.2$v354 %in% c(1,2), 1, ifelse(eb75.2$v354 %in% c(3,
 eb75.2$eu.asst <- ifelse(eb75.2$v355 %in% c(1,2), 1, ifelse(eb75.2$v355 %in% c(3,4), 0, NA))
 eb75.2$eu.fund <- ifelse(eb75.2$v356 %in% c(1,2), 1, ifelse(eb75.2$v356 %in% c(3,4), 0, NA))
 
-eb75.2 <- eb75.2 %>% select(gender_male, age_cat2, NUTS_eb, year, ms, parliament, isocntry,
+eb75.2$country <- ifelse(eb75.2$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb75.2$isocntry)
+
+eb75.2 <- eb75.2 %>% select(gender_male, age_cat2, NUTS_eb_old, year, ms, parliament, country, Constituency, Region.Name,
                           env.important, envorecon, cooperation, eu.leg,
                           eu.asst, eu.fund)
 
@@ -116,12 +129,15 @@ eb83.4$ms <- with(eb83.4, ifelse(d7 %in% c(1,2,3,4), "MAR",
                                                       ifelse(d7 %in% c(13,14), "WID",
                                                              NA))))))
 
-eb83.4$NUTS_eb <- with(eb83.4, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
+eb83.4$NUTS_eb_new <- with(eb83.4, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
                                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", p7gb, sep = ""),
                                              ifelse(isocntry == "IT", paste("IT", p7it_r1, sep = ""), NA))))
 
 
 eb83.4 <- eb83.4 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
+
+eb83.4 <- merge(eb83.4, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_new"), by = "NUTS_eb_new", all.x = T)
+
 
 eb83.4$year <- 2015
 eb83.4$parliament <- 8
@@ -135,8 +151,11 @@ eb83.4$renewtargets <- with(eb83.4, ifelse(qa7 %in% c(1,2), 1,
 eb83.4$supenergyeff <- with(eb83.4, ifelse(qa8 %in% c(1,2), 1, 
                                            ifelse(qa8 %in% c(3,4), 0, NA)))
 
+eb83.4$country <- ifelse(eb83.4$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb83.4$isocntry)
+
+
 # qb are about biodiversity
-eb83.4 <- eb83.4 %>% select(gender_male, age_cat2, NUTS_eb, ms, year, parliament, isocntry,
+eb83.4 <- eb83.4 %>% select(gender_male, age_cat2, NUTS_eb_new, ms, year, parliament, country, Constituency, Region.Name,
                             cc.serious, cc.boosteconjobs, renewtargets, supenergyeff)
 
 ## 88.1
@@ -157,12 +176,15 @@ eb88.1$ms <- with(eb88.1, ifelse(d7 %in% c(1,2,3,4), "MAR",
                                                       ifelse(d7 %in% c(13,14), "WID",
                                                              NA))))))
 
-eb88.1$NUTS_eb <- with(eb88.1, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
+eb88.1$NUTS_eb_new <- with(eb88.1, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
                                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", p7gb, sep = ""),
                                              ifelse(isocntry == "IT", paste("IT", p7it_r1, sep = ""), NA))))
 
 
 eb88.1 <- eb88.1 %>% filter (isocntry %in% c('FR', 'GB-GBN', "GB-NIR", 'IT'))
+
+eb88.1 <- merge(eb88.1, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_new"), by = "NUTS_eb_new", all.x = T)
+
 
 eb88.1$year <- 2017
 eb88.1$parliament <- 8
@@ -195,9 +217,10 @@ eb88.1$eu.asst <- ifelse(eb88.1$qd9_3 %in% c(1,2), 1, ifelse(eb88.1$qa18_3 %in% 
 
 eb88.1$eu.moreprojects <- ifelse(eb88.1$qd20 %in% c(1,2), 1, 0)
 
+eb88.1$country <- ifelse(eb88.1$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb88.1$isocntry)
 
 
-eb88.1 <- eb88.1 %>% select(gender_male, age_cat2, ms, NUTS_eb, year, parliament, isocntry,
+eb88.1 <- eb88.1 %>% select(gender_male, age_cat2, ms, NUTS_eb_new, year, parliament, country, Constituency, Region.Name,
                   env.important, polluters.resp, cooperation, env.enough, stricterreg,
                   enfreg, highertax, heavierfines,financialincentives, investtech, training,
                   eu.leg, eu.enf, eu.asst, eu.moreprojects)
@@ -221,11 +244,14 @@ eb68.2$ms <- with(eb68.2, ifelse(v615 %in% c(1,2,3,4), "MAR",
                                                       ifelse(v615 %in% c(13,14), "WID",
                                                              NA))))))
 
-eb68.2 <- eb68.2 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
+eb68.2 <- eb68.2 %>% filter(v7 %in% c("GB-GBN", "GB-NIR", "FR", "IT"))
 
-eb68.2$NUTS_eb <- with(eb68.2, ifelse(v7 == "FR", paste("FR", v685, sep = ""), 
-                                      ifelse(v7 %in% c("GB-GBN"), paste("UK", v691, sep = ""),
+eb68.2$NUTS_eb_old <- with(eb68.2, ifelse(v7 == "FR", paste("FR", v685, sep = ""), 
+                                      ifelse(v7 %in% c("GB-GBN", "GB-NIR"), paste("UK", v691, sep = ""),
                                              ifelse(v7 == "IT", paste("IT", v714, sep = ""), NA))))
+
+eb68.2 <- merge(eb68.2, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_old"), by = "NUTS_eb_old", all.x = T)
+
 
 eb68.2$year <- 2007
 eb68.2$parliament <- 6
@@ -251,7 +277,10 @@ eb68.2$financialincentives <- with(eb68.2, ifelse(v601 == 1, 1, 0))
 
 eb68.2$isocntry <- eb68.2$v7
 
-eb68.2 <- eb68.2 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, parliament,
+eb68.2$country <- ifelse(eb68.2$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb68.2$isocntry)
+
+
+eb68.2 <- eb68.2 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament, Constituency, Region.Name,
                             env.important,envoverecon1, envoverecon2, cooperation,
                             eu.leg, eu.asst, eu.fund, stricterreg, enfreg, highertax,
                             heavierfines, financialincentives)
@@ -260,11 +289,14 @@ eb68.2 <- eb68.2 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, 
 
 ## eb72.1
 eb72.1<- read_dta("/Users/gabgilling/Downloads/ZA4975_v3-0-0.dta")
-eb72.1 <- eb72.1 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
+eb72.1 <- eb72.1 %>% filter(v7 %in% c("GB-GBN", "GB-NIR", "FR", "IT"))
 
-eb72.1$NUTS_eb <- with(eb72.1, ifelse(v7 == "FR", paste("FR", v504, sep = ""), 
-                                      ifelse(v7 %in% c("GB-GBN"), paste("UK", v510, sep = ""),
+eb72.1$NUTS_eb_old <- with(eb72.1, ifelse(v7 == "FR", paste("FR", v504, sep = ""), 
+                                      ifelse(v7 %in% c("GB-GBN", "GB-NIR"), paste("UK", v510, sep = ""),
                                              ifelse(v7 == "IT", paste("IT", v533, sep = ""), NA))))
+
+eb72.1 <- merge(eb72.1, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_old"), by = "NUTS_eb_old", all.x = T)
+
 
 eb72.1$ms <- with(eb72.1, ifelse(v437 %in% c(1,2,3,4), "MAR",
                                  ifelse(v437 %in% c(5,6,7,8), "REP",
@@ -300,8 +332,11 @@ eb72.1$env.nonegativeecon <- with(eb72.1, ifelse(v414 %in% c(3,4), 1, 0))
 
 eb72.1$isocntry <- eb72.1$v7
 
+eb72.1$country <- ifelse(eb72.1$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb72.1$isocntry)
+
+
 # merge 397 and 398 into 1
-eb72.1 <- eb72.1 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, parliament,
+eb72.1 <- eb72.1 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament, Constituency, Region.Name,
                   cc.serious, cc.enough, cc.stopable, cc.notexaggerated, cc.co2impact,
                   cc.positiveecon, alternativefuels, env.positiveecon, env.nonegativeecon)
 
@@ -312,9 +347,12 @@ eb72.1 <- eb72.1 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, 
 eb71.1<- read_dta("/Users/gabgilling/Downloads/ZA4971_v4-0-0.dta")
 eb71.1 <- eb71.1 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
 
-eb71.1$NUTS_eb <- with(eb71.1, ifelse(v7 == "FR", paste("FR", v711, sep = ""), 
+eb71.1$NUTS_eb_old <- with(eb71.1, ifelse(v7 == "FR", paste("FR", v711, sep = ""), 
                                       ifelse(v7 %in% c("GB-GBN"), paste("UK", v717, sep = ""),
                                              ifelse(v7 == "IT", paste("IT", v744, sep = ""), NA))))
+
+eb71.1 <- merge(eb71.1, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_old"), by = "NUTS_eb_old", all.x = T)
+
 
 eb71.1$ms <- with(eb71.1, ifelse(v641 %in% c(1,2,3,4), "MAR",
                                  ifelse(v641 %in% c(5,6,7,8), "REP",
@@ -345,17 +383,23 @@ eb71.1$alternativefuels <- with(eb71.1, ifelse(v530 %in% c(1,2), 1, 0))
 
 eb71.1$isocntry <- eb71.1$v7
 
-eb71.1 <- eb71.1 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, parliament,
+eb71.1$country <- ifelse(eb71.1$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb71.1$isocntry)
+
+
+eb71.1 <- eb71.1 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament, Constituency, Region.Name,
                             cc.serious, cc.stopable, cc.notexaggerated, cc.co2impact,
                             cc.positiveecon, alternativefuels)
 
 ##eb69.2
 eb69.2<- read_dta("/Users/gabgilling/Downloads/ZA4744_v5-0-0.dta")
-eb69.2 <- eb69.2 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
+eb69.2 <- eb69.2 %>% filter(v7 %in% c("GB-GBN", "GB-NIR", "FR", "IT"))
 
-eb69.2$NUTS_eb <- with(eb69.2, ifelse(v7 == "FR", paste("FR", v834, sep = ""), 
-                                      ifelse(v7 %in% c("GB-GBN"), paste("UK", v840, sep = ""),
+eb69.2$NUTS_eb_old <- with(eb69.2, ifelse(v7 == "FR", paste("FR", v834, sep = ""), 
+                                      ifelse(v7 %in% c("GB-GBN", "GB-NIR"), paste("UK", v840, sep = ""),
                                              ifelse(v7 == "IT", paste("IT", v867, sep = ""), NA))))
+
+eb69.2<- merge(eb69.2, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_old"), by = "NUTS_eb_old", all.x = T)
+
 
 eb69.2$ms <- with(eb69.2, ifelse(v764 %in% c(1,2,3,4), "MAR",
                                  ifelse(v764 %in% c(5,6,7,8), "REP",
@@ -392,7 +436,9 @@ eb69.2$renewtargets <- with(eb69.2, ifelse(v760 %in% c(2,3), 1, 0))
 
 eb69.2$isocntry <- eb69.2$v7
 
-eb69.2 <- eb69.2 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, parliament,
+eb69.2$country <- ifelse(eb69.2$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb69.2$isocntry)
+
+eb69.2 <- eb69.2 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament, Constituency, Region.Name,
                             cc.serious, cc.enough, cc.stopable, cc.notexaggerated , 
                             cc.co2impact, cc.positiveecon, alternativefuels, ghgtarget,
                             renewtargets)
@@ -402,19 +448,23 @@ eb69.2 <- eb69.2 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, 
 ##eb90.2
 eb90.2 <- read_dta("/Users/gabgilling/Downloads/ZA7488_v1-0-0.dta")
 
-eb90.2 <- eb90.2 %>% filter(isocntry %in% c("GB-GBN", "FR", "IT"))
+eb90.2 <- eb90.2 %>% filter(isocntry %in% c("GB", "FR", "IT"))
 
-eb90.2$NUTS_eb <- with(eb90.2, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
+eb90.2$NUTS_eb_new <- with(eb90.2, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
                                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", p7gb, sep = ""),
                                              ifelse(isocntry == "IT", paste("IT", p7it_r1, sep = ""), NA))))
+
+eb90.2<- merge(eb90.2, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_new"), by = "NUTS_eb_new", all.x = T)
+
 
 eb90.2$gender_male <- ifelse(eb90.2$d10 == 1, 1, 0)
 
 eb90.2$age_cat2 <- with(eb90.2, ifelse(d11 >= 15 & d11 < 30, "Y15-29",
                                        ifelse(d11 >= 30 & d11 < 50, "Y30-49",
+                                              ifelse(d11 >= 50 & d11 < 65, "Y50-64",
                                               ifelse(d11 >= 65 & d11 < 85, "Y65-84",
                                                      ifelse(d11 >= 85, "Y_GE85",
-                                                            NA)))))
+                                                            NA))))))
 
 eb90.2$ms <- with(eb90.2, ifelse(d7 %in% c(1,2,3,4), "MAR",
                                  ifelse(d7 %in% c(5,6,7,8), "REP",
@@ -443,17 +493,22 @@ eb90.2$cc.boosteconjobs <- with(eb90.2, ifelse(qb5_1 %in% c(1,2), 1,
 eb90.2$supcleanenergy <- with(eb90.2, ifelse(qb5_5 %in% c(1,2), 1, 
                                             ifelse(qb5_5 %in% c(3,4), 2, NA)))
 
+eb90.2$country <- ifelse(eb90.2$isocntry == "GB", "UK", eb90.2$isocntry)
 
-eb90.2 <- eb90.2 %>% select(gender_male, age_cat2, ms, NUTS_eb, year, parliament, isocntry,
-                  qb1, qb4_1, qb4_2, qb4_3, qb5_1, qb5_2, qb5_3, qb5_4, qb5_5)
+
+eb90.2 <- eb90.2 %>% select(gender_male, age_cat2, ms, NUTS_eb_new, year, parliament, country, Constituency, Region.Name,
+                            cc.humancaused, morerecycling, supenergyeff, supcleaneconomy,cc.boosteconjobs, 
+                            supcleanenergy)
                   
 ##eb62.1
 eb62.1<- read_dta("/Users/gabgilling/Downloads/ZA4230_v1-1-0.dta")
-eb62.1 <- eb62.1 %>% filter(v7 %in% c("GB-GBN", "FR", "IT"))
+eb62.1 <- eb62.1 %>% filter(v7 %in% c("GB-GBN", "GB-NIR", "FR", "IT"))
 
-eb62.1$NUTS_eb <- with(eb62.1, ifelse(v7 == "FR", paste("FR", v627, sep = ""), 
-                                      ifelse(v7 %in% c("GB-GBN"), paste("UK", v633, sep = ""),
+eb62.1$NUTS_eb_old <- with(eb62.1, ifelse(v7 == "FR", paste("FR", v627, sep = ""), 
+                                      ifelse(v7 %in% c("GB-GBN", "GB-NIR"), paste("UK", v633, sep = ""),
                                              ifelse(v7 == "IT", paste("IT", v654, sep = ""), NA))))
+
+eb62.1<- merge(eb62.1, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_old"), by = "NUTS_eb_old", all.x = T)
 
 eb62.1$ms <- with(eb62.1, ifelse(v582 %in% c(1,2,3,4), "MAR",
                                  ifelse(v582 %in% c(5,6,7,8), "REP",
@@ -487,26 +542,38 @@ eb62.1$financialincentives <- with(eb62.1, ifelse(v357 == 1, 1, 0))
 
 eb62.1$isocntry <- eb62.1$v7
 
-eb62.1 <- eb62.1 %>% select(gender_male, age_cat2, isocntry, ms, NUTS_eb, year, parliament,
+eb62.1$country <- ifelse(eb62.1$isocntry %in% c("GB-NIR", "GB-GBN"), "UK", eb62.1$isocntry)
+
+
+eb62.1 <- eb62.1 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament,
+                            Constituency, Region.Name,
                             envimportant1, envimportant2, stricterreg, enfreg, highertax,
                             supNGOs, financialincentives)
+
+
 
 ##eb87.1
 eb87.1 <- read_dta("/Users/gabgilling/Downloads/ZA6861_v1-2-0.dta")
 
 eb87.1 <- eb87.1 %>% filter(isocntry %in% c("GB-GBN", "FR", "IT"))
 
-eb87.1$NUTS_eb <- with(eb87.1, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
+eb87.1$NUTS_eb_new <- with(eb87.1, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
                                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", p7gb, sep = ""),
                                              ifelse(isocntry == "IT", paste("IT", p7it_r1, sep = ""), NA))))
+
+
+eb87.1<- merge(eb87.1, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_new"), by = "NUTS_eb_new", all.x = T)
+
+
 
 eb87.1$gender_male <- ifelse(eb87.1$d10 == 1, 1, 0)
 
 eb87.1$age_cat2 <- with(eb87.1, ifelse(d11 >= 15 & d11 < 30, "Y15-29",
                                        ifelse(d11 >= 30 & d11 < 50, "Y30-49",
+                                              ifelse(d11 >= 50 & d11 < 65, "Y50-64",
                                               ifelse(d11 >= 65 & d11 < 85, "Y65-84",
                                                      ifelse(d11 >= 85, "Y_GE85",
-                                                            NA)))))
+                                                            NA))))))
 
 eb87.1$ms <- with(eb87.1, ifelse(d7 %in% c(1,2,3,4), "MAR",
                                  ifelse(d7 %in% c(5,6,7,8), "REP",
@@ -531,25 +598,32 @@ eb87.1$renewtargets <- with(eb87.1, ifelse(qc7 %in% c(1,2), 1,
 eb87.1$supenergyeff <- with(eb87.1, ifelse(qc8 %in% c(1,2), 1, 
                                            ifelse(qc8 %in% c(3,4), 0, NA)))
 
-eb87.1 <- eb87.1 %>% select(gender_male, age_cat2, ms, NUTS_eb, year, parliament, isocntry,
+eb87.1$country <- ifelse(eb87.1$isocntry %in% c("GB-NIR", "GB-GBN"), "UK", eb87.1$isocntry)
+
+
+eb87.1 <- eb87.1 %>% select(gender_male, age_cat2, ms, NUTS_eb_new, year, parliament, country, Constituency, Region.Name,
                            cc.serious, cc.boosteconjobs, supcleanenergy, renewtargets, supenergyeff)
 
 ##eb80.2
 eb80.2 <- read_dta("/Users/gabgilling/Downloads/ZA5877_v2-0-0.dta")
 
-eb80.2 <- eb80.2 %>% filter(isocntry %in% c("GB-GBN", "FR", "IT"))
+eb80.2 <- eb80.2 %>% filter(isocntry %in% c("GB-GBN", "GB-NIR", "FR", "IT"))
 
-eb80.2$NUTS_eb <- with(eb80.2, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
+eb80.2$NUTS_eb_new <- with(eb80.2, ifelse(isocntry == "FR", paste("FR", p7fr, sep = ""), 
                                       ifelse(isocntry %in% c("GB-GBN", "GB-NIR"), paste("UK", p7gb, sep = ""),
                                              ifelse(isocntry == "IT", paste("IT", p7it_r1, sep = ""), NA))))
+
+eb80.2<- merge(eb80.2, nuts_eb_dict %>% select("Constituency", "Region.Name", "NUTS_eb_new"), by = "NUTS_eb_new", all.x = T)
+
 
 eb80.2$gender_male <- ifelse(eb80.2$d10 == 1, 1, 0)
 
 eb80.2$age_cat2 <- with(eb80.2, ifelse(d11 >= 15 & d11 < 30, "Y15-29",
                                        ifelse(d11 >= 30 & d11 < 50, "Y30-49",
+                                              ifelse(d11 >= 50 & d11 < 65, "Y50-64",
                                               ifelse(d11 >= 65 & d11 < 85, "Y65-84",
                                                      ifelse(d11 >= 85, "Y_GE85",
-                                                            NA)))))
+                                                            NA))))))
 
 eb80.2$ms <- with(eb80.2, ifelse(d7 %in% c(1,2,3,4), "MAR",
                                  ifelse(d7 %in% c(5,6,7,8), "REP",
@@ -570,6 +644,8 @@ eb80.2$renewtargets <- with(eb80.2, ifelse(qa7 %in% c(1,2), 1,
 eb80.2$supenergyeff <- with(eb80.2, ifelse(qa8 %in% c(1,2), 1, 
                                            ifelse(qa8 %in% c(3,4), 0, NA)))
 
+eb80.2$country <- ifelse(eb80.2$isocntry %in% c("GB-NIR", "GB-GBN"), "UK", eb80.2$isocntry)
+
   
-eb80.2 <- eb80.2 %>% select(gender_male, age_cat2, NUTS_eb, ms, year, parliament, isocntry,
+eb80.2 <- eb80.2 %>% select(gender_male, age_cat2, NUTS_eb_new, ms, year, parliament, country, Constituency, Region.Name,
                             cc.serious, cc.boosteconjobs, renewtargets, supenergyeff)
