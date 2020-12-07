@@ -203,13 +203,13 @@ eb88.1$qd7_6 <- ifelse(eb88.1$qd7_6 == 4, NA, eb88.1$qd7_6)
 eb88.1$env.enough <- with(eb88.1, 
                           ifelse(qd7_1+ qd7_2+ qd7_3 + qd7_4 + qd7_5 + qd7_6>= 12, 1, 0))
 
-eb88.1$stricterreg <- with(eb88.1, ifelse(qd8_4== 1, 1, 0))
-eb88.1$enfreg <- with(eb88.1, ifelse(qd8_2 == 1, 1, 0))
-eb88.1$highertax <- with(eb88.1, ifelse(qd8_6 == 1, 1, 0))
-eb88.1$heavierfines <- with(eb88.1, ifelse(qd8_3 == 1, 1, 0))
-eb88.1$financialincentives <- with(eb88.1, ifelse(qd8_5 == 1, 1, 0))
-eb88.1$investtech <- with(eb88.1, ifelse(qd8_7 == 1, 1, 0))
-eb88.1$training <- with(eb88.1, ifelse(qd8_8 == 1, 1, 0))
+# eb88.1$stricterreg <- with(eb88.1, ifelse(qd8_4== 1, 1, 0))
+# eb88.1$enfreg <- with(eb88.1, ifelse(qd8_2 == 1, 1, 0))
+# eb88.1$highertax <- with(eb88.1, ifelse(qd8_6 == 1, 1, 0))
+# eb88.1$heavierfines <- with(eb88.1, ifelse(qd8_3 == 1, 1, 0))
+# eb88.1$financialincentives <- with(eb88.1, ifelse(qd8_5 == 1, 1, 0))
+# eb88.1$investtech <- with(eb88.1, ifelse(qd8_7 == 1, 1, 0))
+# eb88.1$training <- with(eb88.1, ifelse(qd8_8 == 1, 1, 0))
 
 eb88.1$eu.leg <- ifelse(eb88.1$qd9_1 %in% c(1,2), 1, ifelse(eb88.1$qa18_1 %in% c(3,4), 0, NA))
 eb88.1$eu.enf <- ifelse(eb88.1$qd9_2 %in% c(1,2), 1, ifelse(eb88.1$qa18_2 %in% c(3,4), 0, NA))
@@ -220,10 +220,10 @@ eb88.1$eu.moreprojects <- ifelse(eb88.1$qd20 %in% c(1,2), 1, 0)
 eb88.1$country <- ifelse(eb88.1$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb88.1$isocntry)
 
 
-eb88.1 <- eb88.1 %>% select(gender_male, age_cat2, ms, NUTS_eb_new, year, parliament, country, Constituency, Region.Name,
-                  env.important, polluters.resp, cooperation, env.enough, stricterreg,
-                  enfreg, highertax, heavierfines,financialincentives, investtech, training,
-                  eu.leg, eu.enf, eu.asst, eu.moreprojects)
+eb88.1 <- eb88.1 %>% select(gender_male, age_cat2, ms, NUTS_eb_new, year, parliament, 
+                            country, Constituency, Region.Name,
+                            env.important, polluters.resp, cooperation, env.enough, 
+                            eu.leg, eu.enf, eu.asst, eu.moreprojects)
 
 ## eb 68.2
 eb68.2<- read_dta("/Users/gabgilling/Downloads/ZA4742_v4-0-1.dta")
@@ -269,21 +269,21 @@ eb68.2$eu.leg <- ifelse(eb68.2$v607 %in% c(1,2), 1, 0)
 eb68.2$eu.asst <- ifelse(eb68.2$v608 %in% c(1,2), 1, 0)
 eb68.2$eu.fund <- ifelse(eb68.2$v609 %in% c(1,2), 1, 0)
 
-eb68.2$stricterreg <- with(eb68.2, ifelse(v600== 1, 1, 0))
-eb68.2$enfreg <- with(eb68.2, ifelse(v598 == 1, 1, 0))
-eb68.2$highertax <- with(eb68.2, ifelse(v602 == 1, 1, 0))
-eb68.2$heavierfines <- with(eb68.2, ifelse(v599 == 1, 1, 0))
-eb68.2$financialincentives <- with(eb68.2, ifelse(v601 == 1, 1, 0))
+# eb68.2$stricterreg <- with(eb68.2, ifelse(v600== 1, 1, 0))
+# eb68.2$enfreg <- with(eb68.2, ifelse(v598 == 1, 1, 0))
+# eb68.2$highertax <- with(eb68.2, ifelse(v602 == 1, 1, 0))
+# eb68.2$heavierfines <- with(eb68.2, ifelse(v599 == 1, 1, 0))
+# eb68.2$financialincentives <- with(eb68.2, ifelse(v601 == 1, 1, 0))
 
 eb68.2$isocntry <- eb68.2$v7
 
 eb68.2$country <- ifelse(eb68.2$isocntry %in% c("GB-GBN", "GB-NIR"), "UK", eb68.2$isocntry)
 
 
-eb68.2 <- eb68.2 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament, Constituency, Region.Name,
+eb68.2 <- eb68.2 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament, 
+                            Constituency, Region.Name,
                             env.important,envoverecon1, envoverecon2, cooperation,
-                            eu.leg, eu.asst, eu.fund, stricterreg, enfreg, highertax,
-                            heavierfines, financialincentives)
+                            eu.leg, eu.asst, eu.fund)
 
 
 
@@ -534,11 +534,11 @@ eb62.1$envimportant1 <- with(eb62.1, ifelse(v310 == 1, 1, 0))
 eb62.1$envimportant2 <- with(eb62.1, ifelse(v311 %in% c(1,2), 1, 
                                               ifelse(v311 %in% c(3,4), 0, NA)))
 
-eb62.1$stricterreg <- with(eb62.1, ifelse(v352 == 1, 1, 0))
-eb62.1$enfreg <- with(eb62.1, ifelse(v353 == 1, 1, 0))
-eb62.1$highertax <- with(eb62.1, ifelse(v354 == 1, 1, 0))
-eb62.1$supNGOs <- with(eb62.1, ifelse(v356 == 1, 1, 0))
-eb62.1$financialincentives <- with(eb62.1, ifelse(v357 == 1, 1, 0))
+# eb62.1$stricterreg <- with(eb62.1, ifelse(v352 == 1, 1, 0))
+# eb62.1$enfreg <- with(eb62.1, ifelse(v353 == 1, 1, 0))
+# eb62.1$highertax <- with(eb62.1, ifelse(v354 == 1, 1, 0))
+# eb62.1$supNGOs <- with(eb62.1, ifelse(v356 == 1, 1, 0))
+# eb62.1$financialincentives <- with(eb62.1, ifelse(v357 == 1, 1, 0))
 
 eb62.1$isocntry <- eb62.1$v7
 
@@ -546,9 +546,9 @@ eb62.1$country <- ifelse(eb62.1$isocntry %in% c("GB-NIR", "GB-GBN"), "UK", eb62.
 
 
 eb62.1 <- eb62.1 %>% select(gender_male, age_cat2, country, ms, NUTS_eb_old, year, parliament,
-                            Constituency, Region.Name,
-                            envimportant1, envimportant2, stricterreg, enfreg, highertax,
-                            supNGOs, financialincentives)
+                            Constituency, Region.Name,envimportant1, envimportant2)
+                            # envimportant1, envimportant2, stricterreg, enfreg, highertax,
+                            # supNGOs, financialincentives)
 
 
 

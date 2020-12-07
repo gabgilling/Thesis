@@ -3,33 +3,6 @@ title: "France Opinion Polls MRP"
 author: Gabriel Gilling
 ---
 
-It seems that MEPs are elected at the NUTS level.
-
-Step 1: Estimating sub-national preferences
-
-Country 1: France
-https://en.wikipedia.org/wiki/European_Parliament_constituencies_in_France
-2014 ELECTION
-
-EB81.3 Attitudes towards the environment
-
-p7fr_r: NUTS 1 Level
-
-Questions about environment: QA1 to QA18
-
-interesting qs:
-
-QA1: how important is the env? 5pt scale
-QA2: what important issues in env ... binary
-QA3: knowledge about env 5pt scale -- control variable?
-QA12 to QA18
-
-
-QA18!
-Skills and qualifications: QB1 to QB23
-
-qb1: EDUCATION
-
 
 ```{r message=FALSE, warning=FALSE}
 options(dplyr.summarise.inform=F) 
@@ -62,6 +35,8 @@ reg_preds_constituencies <-  reg_preds %>% group_by(Constituency) %>%
                                 unemp_pct2 = weighted.mean(unemp_pct , pop),
                                 higher_ed2 = weighted.mean(higher_ed, pop))
 
+
+census2011_ms[c("gdp_cap2", "hhd_income2", "unemp_pct2", "higher_ed2")] <- NULL
 
 reg_preds_constituencies[c("gdp_cap2", "hhd_income2", "unemp_pct2", "higher_ed2")] <- reg_preds_constituencies[c("gdp_cap2", "hhd_income2", "unemp_pct2", "higher_ed2")] %>% robustHD::standardize()
 
@@ -126,7 +101,7 @@ fit_var_logit <- function(survey_df = c(), var_name, regional_predictors){
   
   set.seed(1010)
 
-  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + gdp_cap2  + unemp_pct2 + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
+  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + gdp_cap2 + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
                     chains = 4, cores=  4, adapt_delta= 0.99))
 
 }
@@ -143,6 +118,7 @@ generate_estimates <- function(survey_df){
     print(col)
     my_list[[i]] <- fit_var_logit(survey_df = survey_df, var_name = col, 
                                   regional_predictors = reg_preds_constituencies)
+    names(my_list)[[1]] <- as.character(col)
     i <- i + 1
   }
   return(my_list)
@@ -152,10 +128,6 @@ fit.692 <- generate_estimates("eb69.2")
 fit.813 <- generate_estimates("eb81.3")
 fit.752 <- generate_estimates("eb75.2")
 fit.621 <- generate_estimates("eb62.1")
-
-fit.621_noed <- generate_estimates("eb62.1")
-fit.621_noed_nohhd <- generate_estimates("eb62.1")
-
 fit.682 <- generate_estimates("eb68.2")
 fit.711 <- generate_estimates("eb71.1")
 fit.721 <- generate_estimates("eb72.1")
@@ -178,6 +150,11 @@ fit_var_logit(survey_df = c("eb88.1"), var_name = "env.important", reg_preds_con
 
 print(fit.protect.env, digits = 3)
 ```
+
+# look into variation of individual questions
+# one of the questions that best captures underlying preferences, captures a trade off econ vs. environment 
+
+# take 1 regional level predictor (gdpcap)
 
 ```{r poststratify}
 census2011_ms$isocntry <- census2011_ms$country
@@ -220,61 +197,102 @@ generate_region_estimates <- function(poststrat, fitted_model){
 poststrat_survey <- function(model_list){
   survey_prefs <- list()
   agg_results <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), model_list[[1]])
-  survey_prefs[[1]] <- agg_results
-  for (i in 2:length(model_list)){
-    print(i)
-    res <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), model_list[[i]])
-    survey_prefs[[i]] <- res
-    agg_results <- rbind(agg_results, res)
+  if (length(model_list) == 1){
+  return(list(agg_results))
   }
+  else {
+    survey_prefs[[1]] <- agg_results
+    for (i in 2:length(model_list)){
+      res <- generate_region_estimates(poststrat = census2011_ms %>%  na.omit(), model_list[[i]])
+      survey_prefs[[i]] <- res
+      agg_results <- rbind(agg_results, res)
+    }
   
-  agg_prefs <- as.data.frame(agg_results %>% group_by(Constituency, country) %>%summarise(mean_pref = mean(pref), mean_se = mean(se)))
-  
-  
-  
-  return(list(agg_prefs, survey_prefs))
+    agg_prefs <- as.data.frame(agg_results %>% 
+                                 group_by(Constituency, country) %>% 
+                                 summarise(mean_pref = mean(pref), mean_se = mean(se)))
+  out <- list(agg_prefs, survey_prefs)
+  names(out) <- c("agg_prefs", "survey_prefs")
+  return(out)
+  }
 }
 
-# skip 6th model too high diverg trans
-prefs.621 <- poststrat_survey(fit.621[-6])
-prefs.621_noed <- poststrat_survey(fit.621_noed)
-prefs.621_noed_nohhd <- poststrat_survey(fit.621_noed_nohhd)
+prefs.621 <- poststrat_survey(fit.621)
+prefs.621[[1]]$year <- 2004
+prefs.621[[1]]$parliament <- 6
+names(prefs.621) <- c("agg_pref", "question_prefs")
 prefs.692 <- poststrat_survey(fit.692)
+prefs.692[[1]]$year <- 2008
+prefs.692[[1]]$parliament <- 6
+names(prefs.692) <- c("agg_pref", "question_prefs")
 prefs.813 <- poststrat_survey(fit.813)
+prefs.813[[1]]$year <- 2014
+prefs.813[[1]]$parliament <- 7
+names(prefs.813) <- c("agg_pref", "question_prefs")
 prefs.752 <- poststrat_survey(fit.752)
+prefs.752[[1]]$parliament <- 7
+prefs.752[[1]]$year <- 2011
+names(prefs.752) <- c("agg_pref", "question_prefs")
 prefs.682 <- poststrat_survey(fit.682)
-
+prefs.682[[1]]$year <- 2007
+prefs.682[[1]]$parliament <- 6
+names(prefs.682) <- c("agg_pref", "question_prefs")
 prefs.711 <- poststrat_survey(fit.711)
+prefs.711[[1]]$year <- 2009
+prefs.711[[1]]$parliament <- 6
+names(prefs.711) <- c("agg_pref", "question_prefs")
 prefs.721 <- poststrat_survey(fit.721)
+prefs.721[[1]]$year <- 2009
+prefs.721[[1]]$parliament <- 7
+names(prefs.721) <- c("agg_pref", "question_prefs")
 prefs.752 <- poststrat_survey(fit.752)
+prefs.752[[1]]$year <- 2011
+prefs.752[[1]]$parliament <- 7
+names(prefs.752) <- c("agg_pref", "question_prefs")
 prefs.802 <- poststrat_survey(fit.802)
+prefs.802[[1]]$year <- 2013
+prefs.802[[1]]$parliament <- 7
+names(prefs.802) <- c("agg_pref", "question_prefs")
 prefs.834 <- poststrat_survey(fit.834)
+prefs.834[[1]]$year <- 2015
+prefs.834[[1]]$parliament <- 8
+names(prefs.834) <- c("agg_pref", "question_prefs")
 prefs.871 <- poststrat_survey(fit.871)
-# skip first model too high diverg trans
-prefs.881 <- poststrat_survey(fit.881[-1])
+prefs.871[[1]]$year <- 2017
+prefs.871[[1]]$parliament <- 8
+names(prefs.871) <- c("agg_pref", "question_prefs")
+prefs.881 <- poststrat_survey(fit.881)
+prefs.881[[1]]$parliament <- 8
+prefs.881[[1]]$year <- 2017
+names(prefs.881) <- c("agg_pref", "question_prefs")
 prefs.902 <- poststrat_survey(fit.902)
-
-total.prefs <- rbind(prefs.621[[1]],prefs.692[[1]], prefs.813[[1]], prefs.752[[1]], prefs.682[[1]], prefs.711[[1]],
-                     prefs.721[[1]],prefs.752[[1]], prefs.802[[1]], prefs.834[[1]], prefs.871[[1]], prefs.881[[1]]) %>% 
-                group_by(Constituency, country) %>% 
-                summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se))
+prefs.902[[1]]$year <- 2018
+prefs.902[[1]]$parliament <- 8
+names(prefs.902) <- c("agg_pref", "question_prefs")
 
 
 
-env_prefs_plot <- ggplot(prefs.621[[2]][[4]],
-                         aes(x= reorder(Constituency, pref), y = pref, color = country)) + 
-  geom_point() + 
-  # geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) + 
-  theme_classic() +
-  ylim(0.2, 1.1) +
-  ggtitle("") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  labs(x = "Constituency", y = "Mean Preference")
+total.prefs <- rbind(prefs.621[[1]],prefs.692[[1]], prefs.813[[1]], prefs.752[[1]], prefs.682[[1]],
+                     prefs.711[[1]], prefs.721[[1]],prefs.752[[1]], prefs.802[[1]], prefs.834[[1]],
+                     prefs.871[[1]], prefs.902[[1]], prefs.881[[1]]) 
 
-env_prefs_plot
+total.prefs$parliament <- ifelse(total.prefs$parliament == 6, "6th Term (2004-2009)", 
+                                 ifelse(total.prefs$parliament == 7, "7th Term (2009-2014)", "8th Term (2014-2019)"))
 
-# ggsave("/Users/gabgilling/Documents/GitHub/Thesis/Plots/env_prefs_plot.jpg")
+```
 
+
+```{r}
+ggplot(prefs.692[[1]] %>% 
+                          group_by(Constituency, country) %>% 
+                          summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se)),
+                    aes(x= reorder(Constituency, mean_pref), y = mean_pref, color = country)) + 
+                    geom_point() + 
+                    geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) +
+                    theme_classic() +
+                    ggtitle("") +
+                    theme(axis.text.x = element_text(angle = 90)) +
+                    labs(x = "Constituency", y = "Mean Preference")
 ```
 
 ```{r}
@@ -300,19 +318,6 @@ ggplot(prefs.621[[1]], aes(x = Constituency, y= mean_pref)) + geom_point() +   t
 ```
 
 
-
-```{r}
-ggplot(protect.envs_prefs.r2,
-  aes(x= reorder(constituency, pref), y = pref, color = country)) + 
-  geom_point() + 
-  geom_errorbar(aes(ymin= pref - se, ymax= pref + se), width=0) + 
-  theme_classic() +
-  # ylim(0.6, 1) + 
-  ggtitle("") +
-  theme(axis.text.x = element_text(angle = 90)) +
-  labs(x = "Constituency", y = "Mean Preference")
-```
-
 I. Get regional level roll call votes. Need to figure out what roll call votes can be correlated to regional level preferences
 
 votewatch.eu/en/term9-european-parliament-latest-votes.html
@@ -320,10 +325,6 @@ votewatch.eu/en/term9-european-parliament-latest-votes.html
 https://mepsurvey.eu/data-objects/data/
 
 # MEP Survey data
-
-```{r}
-mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/mep_data_with_IDs.csv")
-```
 
 # T4-0084/1995
 
@@ -339,12 +340,13 @@ need to adjust for fact that some MEPs were not in parliament at that time
 library(rjson)
 MEP.data <- fromJSON(file = "/Users/gabgilling/Dropbox/QMSS/Fall 2020/Thesis/Data/ep_votes.json")
 
-
-cond <- sapply(MEP.data, function(x) grepl("A8-0287/2016", x$title))
-
-cond <- sapply(MEP.data, function(x) grepl("envir", x$title))
-
-cond.ts <- sapply(MEP.data, function(x) grepl("2018-11", x$ts))
+legislation <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/legislation.csv")
+# 
+# cond <- sapply(MEP.data, function(x) grepl(legislation$ID[1], x$title))
+# 
+# cond <- sapply(MEP.data, function(x) grepl("envir", x$title))
+# 
+# cond.ts <- sapply(MEP.data, function(x) grepl("2018-11", x$ts))
 
 #A8-0354/2018 CO2 emission performance standards for new heavy duty vehicles ***I	
 cond1 <- sapply(MEP.data, function(x) grepl("A8-0354/2018", x$title))
@@ -368,15 +370,48 @@ A8.0249 <- dat[cond2][[1]]
 # establishment of a Programme for the Environment and Climate Action (LIFE)
 # https://www.europarl.europa.eu/doceo/document/A-7-2012-0294_EN.html?redirect
 
+cond3 <- sapply(MEP.data, function(x) grepl(legislation$ID[1], x$title))
+dat <- MEP.data[cond3]
+cond3 <- sapply(dat, function(x) grepl("roposition|Résolution", x$title))
+A7.0294 <- dat[cond3][[1]]
 # https://eur-lex.europa.eu/legal-content/en/HIS/?uri=CELEX:32008L0050
+
+legislation_list <- list()
+
+for (i in 1:nrow(legislation)){
+  cond <- sapply(MEP.data, function(x) grepl(legislation$ID[i], x$title))
+  dat <- MEP.data[cond]
+  cond <- sapply(dat, function(x) grepl("roposition|ésolution", x$title))
+  try(legislation_list[[i]] <- dat[cond][[1]])
+}
+
+cond <- (sapply(MEP.data, function(x) grepl("A7-0191/2012", x$doc)))
+
+for (i in 1:length(MEP.data)){
+  try(if (MEP.data[[i]]$votes$`+`$total == 634){
+    print(MEP.data[[i]]$title)
+  }, silent = T)
+}
+sapply(MEP.data, function(x) {x == 634}, x$votes$`+`$total)
+
+dat <- MEP.data[[cond]]
 ```
 
 ```{r}
+mep.ids <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/mep_data_with_IDs.csv")
 
-count_votes <- function(resolution_name, col_name){
+
+mep.ids$constituency <- ifelse(mep.ids$constituency == "Southern Italy", "South Italy",
+                               ifelse(mep.ids$constituency == "Massif-central-Centre", 	    
+                                      "Massif-central–Centre", mep.ids$constituency))
+
+mep.ids$Parliament <- as.character(mep.ids$Parliament)
+mep.ids$X <- NULL
+
+count_votes <- function(resolution, col_name){
+  # initialize 0s for abstained botes
   mep.ids[col_name] <- 0
-  # print(get(resolution_name))
-  resolution = get(resolution_name)
+  
   for (i in resolution$votes$`+`$groups){
     for (id in unname(unlist(i))){
       if (id %in% unique(mep.ids$ID)){
@@ -392,29 +427,64 @@ count_votes <- function(resolution_name, col_name){
       }
     }
   }
+  # set values to NA for MEPs not present during a certain vote
+  mep.ids[col_name] <-  with(mep.ids, ifelse(Parliament != substring(col_name, 2,2), NA, get(col_name)))
   return(mep.ids)
 }
 
-mep.ids$env1 <- 0
-mep.ids$env2 <- 0
 
-mep.ids <- count_votes(resolution_name = "A8.0249", "env2")
-mep.ids <- count_votes(resolution_name = "A8.0354", "env1")
+for (i in 1:length(legislation_list)){
+  # some laws were not present in the parltrack database, so ignore them
+  if (length(legislation_list[[i]]) != 0){
+    # create a column with the law's ID and count votes
+    mep.ids <- count_votes(resolution = legislation_list[[i]], legislation_list[[i]]$doc)
+  }
+}
 
-mep.ids$env1 <- with(mep.ids, ifelse(Parliament != 8, NA, env1))
-mep.ids$env2 <- with(mep.ids, ifelse(Parliament != 8, NA, env2))
+library(matrixStats)
+
+mep.ids$ID <- as.character(mep.ids$ID)
+
+mep.ids <- mep.ids %>% group_by(constituency, Parliament) %>% 
+  ungroup %>% 
+  mutate(mean_pref = rowMeans(select(., is.numeric), na.rm = T), 
+         mean_sd = apply(select(., is.numeric) ,1, sd, na.rm = TRUE))
+
+#   mutate(newvar = rowSums(select(., starts_with("prefix_"))))
+
+unique(mep.ids$constituency)
+```
+
+
+```{r}
+mep_prefs.total <- mep.ids %>% 
+         group_by(constituency, country) %>% 
+         summarise(mep_pref = mean(mean_pref, na.rm = T))
+
+voter_prefs.total <- total.prefs %>% 
+  group_by(Constituency, country) %>% 
+  summarise(mean_pref = mean(mean_pref))
+
+reg_df <- merge(mep_prefs.total,voter_prefs.total, by.x = "constituency", by.y = "Constituency", all.y = T)
+
+summary(lm(mep_pref ~ mean_pref + country.x, data = reg_df), digits = 3)
 
 ```
 
 
 ```{r}
-ggplot(mep.ids %>% group_by(constituency, Parliament, country) %>% 
-       summarise(mep_pref = mean(env1+env2), mep_se = sd(env1+env2) / sqrt(length(env1+env2))) %>% na.omit(), 
-       aes(x = constituency, y = mep_pref, color = country)) + 
-  geom_point() + 
-  geom_errorbar(aes(ymin= mep_pref - mep_se, ymax= mep_pref + mep_se), width=0) + 
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 90))
+library(stargazer)
+mep_prefs.total.parl <- mep.ids %>% 
+         group_by(constituency, country, Parliament) %>% 
+         summarise(mep_pref = mean(mean_pref, na.rm = T))
+
+voter_prefs.total.parl <- total.prefs %>% 
+  group_by(Constituency, parliament, country) %>% 
+  summarise(mean_pref = mean(mean_pref))
+
+reg_df2 <- merge(mep_prefs.total.parl,voter_prefs.total.parl, by.x = c("Parliament", "constituency"), by.y = c("parliament", "Constituency"), all.y = T)
+
+stargazer(lm(mep_pref ~ mean_pref + country.x + as.factor(Parliament), data = reg_df2), title = "Regression Output")
 ```
 
 ```{r warning=FALSE}

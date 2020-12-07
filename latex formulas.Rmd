@@ -1,0 +1,77 @@
+---
+title: "Thesis Latex formulas"
+author: "Gabriel Gilling"
+date: "12/6/2020"
+output: pdf_document
+---
+
+$$
+Pr(y_i = 1) = logit^{-1}(
+\alpha_{\rm ct[i]}^{\rm country} +
+\alpha_{\rm cn[i]}^{\rm constituency}
++ \alpha_{\rm a[i]}^{\rm age}
++ \alpha_{\rm ms[i]}^{\rm maritalstatus}
++ \beta^{\rm male} \cdot {\rm Male}_{\rm i} 
++ \beta^{\rm \text{GDP per capita}} \cdot {\rm \text{GDP per capita}}_{\rm cn} 
+)
+$$
+
+
+$$
+\begin{align*}
+\alpha_{\rm ct}^{\rm country} & \sim {\rm Normal}(0,\sigma^{\rm country}) \textrm{ for ct = 1,...,3}\\
+\alpha_{\rm cn}^{\rm constituency} & \sim {\rm Normal}(0,\sigma^{\rm constituency}) \textrm{ for cn = 1,...,24}\\
+\alpha_{\rm a}^{\rm age} & \sim {\rm Normal}(0,\sigma^{\rm age}) \textrm{ for a = 1,...,5}\\
+\alpha_{\rm ms}^{\rm \text{marital status}} & \sim {\rm Normal}(0,\sigma^{\rm \text{marital status}}) \textrm{ for ms = 1,...,6}\\
+\end{align*}
+$$
+
+
+
+$$
+\usepackage{amsmath}
+
+\begin{table}[!htbp] \centering 
+  \caption{Regression Output} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-2} 
+\\[-1.8ex] & mep\_pref \\ 
+\hline \\[-1.8ex] 
+ mean\_pref & $-$1.273 \\ 
+  & (1.027) \\ 
+  & \\ 
+ country.xItaly & $-$0.103$^{**}$ \\ 
+  & (0.051) \\ 
+  & \\ 
+ country.xUnited Kingdom & $-$0.096 \\ 
+  & (0.064) \\ 
+  & \\ 
+ as.factor(Parliament)7 & 0.007 \\ 
+  & (0.043) \\ 
+  & \\ 
+ as.factor(Parliament)8 & 0.056 \\ 
+  & (0.147) \\ 
+  & \\ 
+ Constant & 1.625$^{**}$ \\ 
+  & (0.771) \\ 
+  & \\ 
+\hline \\[-1.8ex] 
+Observations & 72 \\ 
+R$^{2}$ & 0.217 \\ 
+Adjusted R$^{2}$ & 0.158 \\ 
+Residual Std. Error & 0.141 (df = 66) \\ 
+F Statistic & 3.669$^{***}$ (df = 5; 66) \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
+$$
+
+
+
+
