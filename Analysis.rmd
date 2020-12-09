@@ -455,6 +455,14 @@ mep.ids <- mep.ids %>% group_by(constituency, Parliament) %>%
 unique(mep.ids$constituency)
 ```
 
+```{r}
+mep.ids <- mep.ids %>% group_by(constituency, ideo6, Parliament) %>% 
+  ungroup %>% 
+  mutate(mean_pref_ideo = rowMeans(select(., is.numeric), na.rm = T), 
+         mean_sd_ideo = apply(select(., is.numeric) ,1, sd, na.rm = TRUE))
+
+```
+
 
 ```{r}
 mep_prefs.total <- mep.ids %>% 

@@ -98,3 +98,30 @@ ggplot(mep.ids %>%
   scale_color_discrete(name="Country", labels = c("France", "Italy", "United\nKingdom")) +
   labs(x = "Constituency", y = "Mean Preference") +
   geom_hline(data = means, aes(yintercept = m), linetype = 'dashed')
+
+
+means <- mep.ids %>% 
+  group_by(constituency, ideo6) %>% 
+  summarise(mean_pref = mean(mean_pref), mean_sd = mean(mean_sd)) %>% 
+  group_by(ideo6) %>% summarise(m = mean(mean_pref))
+
+
+ggplot(mep.ids %>% 
+         group_by(constituency, ideo6) %>% 
+         summarise(mean_pref = mean(mean_pref),
+                mean_sd = mean(mean_sd)),
+       aes(x = reorder(constituency, mean_pref), y = mean_pref)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin= mean_pref - mean_sd, ymax= mean_pref + mean_sd), width=0) +
+  facet_wrap(~ideo6) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, size = 6), plot.title = element_text(hjust = 0.5),
+        legend.position = c(.084,.865), legend.key.size = unit(0.125, "cm"),
+        legend.background=element_blank()) + 
+  ggtitle("MEP Preferences For Environmental Regulation\nEuropean Parliament Constituencies\nby Term") +
+  coord_flip() +
+  scale_color_discrete(name="Country", labels = c("France", "Italy", "United\nKingdom")) +
+  labs(x = "Constituency", y = "Mean Preference") +
+  geom_hline(data = means, aes(yintercept = m), linetype = 'dashed')
+
+
