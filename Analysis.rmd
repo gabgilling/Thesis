@@ -1,5 +1,6 @@
 ---
-title: "France Opinion Polls MRP"
+title: "Mr. P Visits Strasburg"
+date: "Fall 2020"
 author: Gabriel Gilling
 ---
 
@@ -13,6 +14,7 @@ library(ggplot2)
 library(forcats)
 library(rstanarm)
 
+setwd("/Users/gabgilling/Documents/Documents - Gabriel’s MacBook Pro/GitHub/Thesis")
 #v668 IT NUTS 1, v660 FR NUTS 2, v673 NUTS1 UK
 #v601 gender v602 age v596 ms
 
@@ -101,7 +103,7 @@ fit_var_logit <- function(survey_df = c(), var_name, regional_predictors){
   
   set.seed(1010)
 
-  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + gdp_cap2 + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
+  return(stan_glmer(cbind(pro, against) ~ (1|country) + (1|Constituency) + (1 | age_cat2)  + (1|ms) + (1 | age_cat2:ms) + (1|age_cat2:gender_male) + (1|gender_male:ms) + gdp_cap2 + gender_male, data = temp, family = binomial(link = "logit"), refresh= 0, 
                     chains = 4, cores=  4, adapt_delta= 0.99))
 
 }
@@ -125,21 +127,23 @@ generate_estimates <- function(survey_df){
 }
 
 fit.692 <- generate_estimates("eb69.2")
-fit.813 <- generate_estimates("eb81.3")
-fit.752 <- generate_estimates("eb75.2")
-fit.621 <- generate_estimates("eb62.1")
-fit.682 <- generate_estimates("eb68.2")
-fit.711 <- generate_estimates("eb71.1")
-fit.721 <- generate_estimates("eb72.1")
-fit.752 <- generate_estimates("eb75.2")
 
-fit.802 <- generate_estimates("eb80.2")
-fit.834 <- generate_estimates("eb83.4")
+fit.813_int <- generate_estimates("eb81.3")
+fit.752_int <- generate_estimates("eb75.2")
+fit.621_int <- generate_estimates("eb62.1")
+fit.682_int <- generate_estimates("eb68.2")
 
-fit.871 <- generate_estimates("eb87.1")
+fit.711_int <- generate_estimates("eb71.1")
+fit.721_int <- generate_estimates("eb72.1")
+fit.752_int <- generate_estimates("eb75.2")
 
-fit.881 <- generate_estimates("eb88.1")
-fit.902 <- generate_estimates("eb90.2")
+fit.802_int <- generate_estimates("eb80.2")
+fit.834_int <- generate_estimates("eb83.4")
+
+fit.871_int <- generate_estimates("eb87.1")
+
+fit.881_int <- generate_estimates("eb88.1")
+fit.902_int <- generate_estimates("eb90.2")
 
 
 set.seed(1011)
@@ -276,14 +280,56 @@ total.prefs <- rbind(prefs.621[[1]],prefs.692[[1]], prefs.813[[1]], prefs.752[[1
                      prefs.711[[1]], prefs.721[[1]],prefs.752[[1]], prefs.802[[1]], prefs.834[[1]],
                      prefs.871[[1]], prefs.902[[1]], prefs.881[[1]]) 
 
-total.prefs$parliament <- ifelse(total.prefs$parliament == 6, "6th Term (2004-2009)", 
-                                 ifelse(total.prefs$parliament == 7, "7th Term (2009-2014)", "8th Term (2014-2019)"))
+total.prefs_int <- rbind(prefs.621_int[[1]],prefs.692_int[[1]], prefs.813_int[[1]], prefs.752_int[[1]], prefs.682_int[[1]],
+                     prefs.711_int[[1]], prefs.721_int[[1]],prefs.752_int[[1]], prefs.802_int[[1]], prefs.834_int[[1]],
+                     prefs.871_int[[1]], prefs.902_int[[1]], prefs.881_int[[1]]) 
 
+total.prefs_int$parliament <- ifelse(total.prefs_int$parliament == 6, "6th Term (2004-2009)", 
+                                 ifelse(total.prefs_int$parliament == 7, "7th Term (2009-2014)", "8th Term (2014-2019)"))
+
+```
+
+```{r}
+ggplot(total.prefs_int %>% 
+                          group_by(Constituency, country) %>% 
+                          summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se)),
+                    aes(x= reorder(Constituency, mean_pref), y = mean_pref, color = country)) + 
+                    geom_point() + 
+                    geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) +
+                    theme_classic() +
+                    ggtitle("") +
+                    theme(axis.text.x = element_text(angle = 90)) +
+                    labs(x = "Constituency", y = "Mean Preference")
+```
+```{r}
+ggplot(total.prefs %>% 
+                          group_by(Constituency, country) %>% 
+                          summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se)),
+                    aes(x= reorder(Constituency, mean_pref), y = mean_pref, color = country)) + 
+                    geom_point() + 
+                    geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) +
+                    theme_classic() +
+                    ggtitle("") +
+                    theme(axis.text.x = element_text(angle = 90)) +
+                    labs(x = "Constituency", y = "Mean Preference")
 ```
 
 
 ```{r}
 ggplot(prefs.692[[1]] %>% 
+                          group_by(Constituency, country) %>% 
+                          summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se)),
+                    aes(x= reorder(Constituency, mean_pref), y = mean_pref, color = country)) + 
+                    geom_point() + 
+                    geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) +
+                    theme_classic() +
+                    ggtitle("") +
+                    theme(axis.text.x = element_text(angle = 90)) +
+                    labs(x = "Constituency", y = "Mean Preference")
+```
+
+```{r}
+ggplot(prefs.692_int[[1]] %>% 
                           group_by(Constituency, country) %>% 
                           summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se)),
                     aes(x= reorder(Constituency, mean_pref), y = mean_pref, color = country)) + 
@@ -492,38 +538,10 @@ voter_prefs.total.parl <- total.prefs %>%
 
 reg_df2 <- merge(mep_prefs.total.parl,voter_prefs.total.parl, by.x = c("Parliament", "constituency"), by.y = c("parliament", "Constituency"), all.y = T)
 
-stargazer(lm(mep_pref ~ mean_pref + country.x + as.factor(Parliament), data = reg_df2), title = "Regression Output")
+reg_df2$mep_pref_c <- reg_df2$mep_pref - mean(reg_df2$mep_pref)
+reg_df2$mean_pref_c <- reg_df2$mean_pref - mean(reg_df2$mean_pref)
+
+summary(lm(mep_pref~ country.x + as.factor(Parliament), data = reg_df2), title = "Regression Output")
 ```
 
-```{r warning=FALSE}
-library(rgdal)
-library(broom)
-library(maptools)
-library(ggplot2)
-
-# install.packages('rgeos', type='source')
-# install.packages('rgdal', type='source')
-
-NUTS_shape = readOGR(dsn = "/Users/gabgilling/Desktop/NUTS_2013_01M_SH/data/")
-
-NUTS_shape2 = readOGR(dsn = "/Users/gabgilling/Desktop/NUTS_2013_01M_SH/data/", layer = "NUTS_RG_01M_2013")
-
-nuts <- readOGR(dsn = "/Users/gabgilling/Desktop/NUTS_2013_01M_SH/data/NUTS_RG_01M_2013.shp")
-
-nuts <- nuts[nuts$STAT_LEVL_ %in% c(1,2),]
-nuts <- nuts[grepl("FR|UK|IT",nuts$NUTS_ID),]
-
-# plot(nuts)
-shp_df <- fortify(nuts, region = "NUTS_ID")
-
-shp_df <- shp_df %>% filter(id %in% c("FR", "UK", "IT"))
-
-# NUTS_shape2@data$LAT <- NUTS_shape@data$LAT
-# NUTS_shape2@data$LON <- NUTS_shape@data$LON
-# 
-# NUTS_fort <- tidy(NUTS_shape)
-ggplot() + geom_polygon(data= shp_df, aes(x = long, y = lat, group = group, color = id))
-
-plot(NUTS_shape)
-```
 
