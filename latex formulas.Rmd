@@ -6,14 +6,20 @@ output: pdf_document
 ---
 
 $$
-Pr(y_i = 1) = logit^{-1}(
+\begin{align}
+Pr(y_i = 1) &= logit^{-1}(
+\gamma+
 \alpha_{\rm ct[i]}^{\rm country} +
 \alpha_{\rm cn[i]}^{\rm constituency}
 + \alpha_{\rm a[i]}^{\rm age}
-+ \alpha_{\rm ms[i]}^{\rm maritalstatus}
++ \alpha_{\rm ms[i]}^{\rm \text{marital status}}
 + \beta^{\rm male} \cdot {\rm Male}_{\rm i} 
-+ \beta^{\rm \text{GDP per capita}} \cdot {\rm \text{GDP per capita}}_{\rm cn} 
++ \beta^{\rm \text{GDP per capita}} \cdot {\rm \text{GDP per capita}}_{\rm cn}\\
+ & + \alpha_{g[i],ms[i]}^{\rm male \cdot \ \text{marital status}} 
++ \alpha_{g[i],a[i]}^{\rm male \cdot \ age} + 
+\alpha_{a[i],ms[i]}^{\rm age \cdot \ \text{marital status}} 
 )
+\end{align}
 $$
 
 
@@ -23,6 +29,9 @@ $$
 \alpha_{\rm cn}^{\rm constituency} & \sim {\rm Normal}(0,\sigma^{\rm constituency}) \textrm{ for cn = 1,...,24}\\
 \alpha_{\rm a}^{\rm age} & \sim {\rm Normal}(0,\sigma^{\rm age}) \textrm{ for a = 1,...,5}\\
 \alpha_{\rm ms}^{\rm \text{marital status}} & \sim {\rm Normal}(0,\sigma^{\rm \text{marital status}}) \textrm{ for ms = 1,...,6}\\
+\alpha_{\rm g,ms}^{\rm male.\text{marital status}} & \sim {\rm Normal}(0,\sigma^{\rm male.\text{marital status}}) \textrm{ for g = 1,2 and ms = 1,...,6}\\
+\alpha_{\rm g,a}^{\rm male.age} & \sim {\rm Normal}(0,\sigma^{\rm male.age}) \textrm{ for g = 1,2 and a = 1,...,5}\\
+\alpha_{\rm ms,a}^{\rm \text{marital status}.age} & \sim {\rm Normal}(0,\sigma^{\rm \text{marital status}.age}) \textrm{ for  ms = 1,...,6 and a = 1,...,5}\\
 \end{align*}
 $$
 

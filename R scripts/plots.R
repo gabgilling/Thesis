@@ -1,7 +1,9 @@
+total.prefs <- readRDS("/Users/gabgilling/Documents/Documents - Gabriel’s MacBook Pro/GitHub/Thesis/Data/total.prefs.rds")
+
 prefs.plot.total <- ggplot(total.prefs %>% 
                              group_by(Constituency, country) %>% 
                              summarise(mean_pref = mean(mean_pref), mean_se = mean(mean_se)),
-                           aes(x= reorder(Constituency, -mean_pref), y = mean_pref, color = country)) + 
+                           aes(x= reorder(Constituency, mean_pref), y = mean_pref, color = country)) + 
   geom_point() + 
   geom_errorbar(aes(ymin= mean_pref - mean_se, ymax= mean_pref + mean_se), width=0) +
   theme_bw() +

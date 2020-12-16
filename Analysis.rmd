@@ -13,19 +13,17 @@ library(robustHD)
 library(ggplot2)
 library(forcats)
 library(rstanarm)
+library(stargazer)
 
 setwd("/Users/gabgilling/Documents/Documents - Gabriel’s MacBook Pro/GitHub/Thesis")
-#v668 IT NUTS 1, v660 FR NUTS 2, v673 NUTS1 UK
-#v601 gender v602 age v596 ms
-
-unique(eb75.2$v596)
 ```
 
 Step 2: Census
 ```{r}
 # census2011_education <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_edu_predictors.csv", header = T)
 
-source("https://raw.githubusercontent.com/gabgilling/Thesis/master/prepare_census.R")
+source("https://raw.githubusercontent.com/gabgilling/Thesis/master/R%20scripts/prepare_census.R")
+
 census2011_ms <- read.csv("https://raw.githubusercontent.com/gabgilling/Thesis/master/Data/census_ms_predictors.csv", header = T)
 
 reg_preds <- merge(reg_preds,census2011_ms %>% select(Constituency, Region.Name, country), by = "Region.Name", all.x = TRUE)
@@ -46,22 +44,6 @@ census2011_ms <-merge(census2011_ms, reg_preds_constituencies, by = "Constituenc
 
 
 ```
-
-
-Step 3: Get regional and country level predictors
-
-https://ec.europa.eu/eurostat/web/regions/data/database
-
-## add marital status 
-
-https://ec.europa.eu/eurostat/web/rural-development/data
-
-https://www.gesis.org/en/eurobarometer-data-service/search-data-access/topics
-https://www.kaggle.com/ruslankl/european-union-lgbt-survey-2012?select=LGBT_Survey_Discrimination.csv
-
-## is having more regional predictors than individual predictors OK?
-
-try to minimize amounts of regional predictors, maybe 2-3
 
 ```{r estimate_preferences}
 
@@ -357,11 +339,7 @@ ggplot(cbind(t[c(1:2)], mean_prefs = t[-c(1:2)] %>% rowMeans()), aes( x= Constit
   labs(x = "Constituency", y = "Mean Preference") 
 
 ```
-```{r}
-ggplot(prefs.621[[1]], aes(x = Constituency, y= mean_pref)) + geom_point() +   theme(axis.text.x = element_text(angle = 90)) +
-  labs(x = "Constituency", y = "Mean Preference") 
 
-```
 
 
 I. Get regional level roll call votes. Need to figure out what roll call votes can be correlated to regional level preferences
@@ -416,10 +394,11 @@ A8.0249 <- dat[cond2][[1]]
 # establishment of a Programme for the Environment and Climate Action (LIFE)
 # https://www.europarl.europa.eu/doceo/document/A-7-2012-0294_EN.html?redirect
 
-cond3 <- sapply(MEP.data, function(x) grepl(legislation$ID[1], x$title))
+cond3 <- sapply(MEP.data, function(x) grepl("2011/0080(COD)", x$epref))
+
 dat <- MEP.data[cond3]
 cond3 <- sapply(dat, function(x) grepl("roposition|Résolution", x$title))
-A7.0294 <- dat[cond3][[1]]
+t <- dat[cond3][[1]]
 # https://eur-lex.europa.eu/legal-content/en/HIS/?uri=CELEX:32008L0050
 
 legislation_list <- list()
@@ -431,16 +410,16 @@ for (i in 1:nrow(legislation)){
   try(legislation_list[[i]] <- dat[cond][[1]])
 }
 
-cond <- (sapply(MEP.data, function(x) grepl("A7-0191/2012", x$doc)))
-
-for (i in 1:length(MEP.data)){
-  try(if (MEP.data[[i]]$votes$`+`$total == 634){
-    print(MEP.data[[i]]$title)
-  }, silent = T)
-}
-sapply(MEP.data, function(x) {x == 634}, x$votes$`+`$total)
-
-dat <- MEP.data[[cond]]
+# cond <- (sapply(MEP.data, function(x) grepl("A7-0191/2012", x$doc)))
+# 
+# for (i in 1:length(MEP.data)){
+#   try(if (MEP.data[[i]]$votes$`+`$total == 634){
+#     print(MEP.data[[i]]$title)
+#   }, silent = T)
+# }
+# sapply(MEP.data, function(x) {x == 634}, x$votes$`+`$total)
+# 
+# dat <- MEP.data[[cond]]
 ```
 
 ```{r}
@@ -497,8 +476,8 @@ mep.ids <- mep.ids %>% group_by(constituency, Parliament) %>%
          mean_sd = apply(select(., is.numeric) ,1, sd, na.rm = TRUE))
 
 #   mutate(newvar = rowSums(select(., starts_with("prefix_"))))
-
-unique(mep.ids$constituency)
+par(pin = c(2,2), cex.main = 0.75)
+hist(mep.ids$mean_pref, breaks = 13, main = "Distribution of MEP Voting Preferences", xlab = "Index")
 ```
 
 ```{r}
@@ -536,10 +515,21 @@ voter_prefs.total.parl <- total.prefs %>%
   group_by(Constituency, parliament, country) %>% 
   summarise(mean_pref = mean(mean_pref))
 
-reg_df2 <- merge(mep_prefs.total.parl,voter_prefs.total.parl, by.x = c("Parliament", "constituency"), by.y = c("parliament", "Constituency"), all.y = T)
+voter_prefs.total.parl$country <- ifelse(voter_prefs.total.parl$country == "IT", "Italy",
+                                         ifelse(voter_prefs.total.parl$country  == "UK", "United Kingdom", "France"))
+
+# mep_prefs.total.parl$Parliament <- ifelse(mep_prefs.total.parl$Parliament == 6, "6th Term (2004-2009)", 
+#                                  ifelse(mep_prefs.total.parl$Parliament == 7, "7th Term (2009-2014)", "8th Term (2014-2019)"))
 
 
-(lm(mep_pref~ country.x + as.factor(Parliament), data = reg_df2))
+reg_df2 <- merge(mep_prefs.total.parl,voter_prefs.total.parl, by.x = c("Parliament", "constituency"), by.y = c("parliament", "Constituency"))
+
+
+summary(lm(mep_pref~ mean_pref + factor(country.x) +factor(constituency), data = reg_df2))
+
+m3.fit <- stan_glm(mep_pref~ mean_pref + factor(country.x) +
+                     factor(constituency), data = reg_df2, 
+                   chains =4 ,cores =4, adapt_delta = 0.99)
 
 ```
 
@@ -549,10 +539,19 @@ voter_prefs.total <- total.prefs %>%
   group_by(Constituency, country) %>% 
   summarise(mean_pref = mean(mean_pref))
 
-reg_df <- merge(mep.ids %>% select(mean_pref, constituency, Parliament),voter_prefs.total, by.x = "constituency", by.y = "Constituency", all.y = T)
+reg_df <- merge(mep.ids %>% group_by(Name) %>%  select(mean_pref, constituency, Parliament, ideo6),voter_prefs.total, by.x = "constituency", by.y = "Constituency", all.y = T)
 
 reg_df$mep_pref <- reg_df$mean_pref.x
 
-summary(lm(mep_pref ~ mean_pref.y + country + Parliament, data = reg_df), digits = 3)
+m1 <- lm(mep_pref ~ mean_pref.y + country + Parliament, data = reg_df)
+m2 <-lm(mep_pref ~ mean_pref.y, data = reg_df)
 
+m3 <- lm(mep_pref ~ mean_pref.y + country + Parliament + ideo6, data = reg_df)
+
+stargazer(m2,m1,m3)
+
+reg_df$mean_pref_c <- reg_df$mean_pref.y - mean(reg_df$mean_pref.y)
+m3 <- lm(mep_pref ~ mean_pref_c + constituency, data = reg_df)
+def <- as.data.frame(m3$coefficients)
+write.csv(def, "/Users/gabgilling/Documents/Documents - Gabriel’s MacBook Pro/GitHub/Thesis/Data/deficit_coefs.csv")
 ```
